@@ -3,201 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orbitron Admin | Command Center</title>
+    <title>Orbitron CAC | Comando EB</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-    
     <style>
-        :root { --bg-panel: #020617; --accent: #6366f1; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-panel); color: #f8fafc; }
-        
-        .sidebar-glass { background: rgba(15, 23, 42, 0.8); border-right: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(10px); }
-        .chat-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border-left: 4px solid transparent; }
-        .chat-card:hover { background: rgba(99, 102, 241, 0.05); }
-        .chat-active { background: rgba(99, 102, 241, 0.12); border-left-color: var(--accent); }
-        
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-        
-        .message-bubble-admin { background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%); border-radius: 18px 18px 2px 18px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); }
-        .message-bubble-client { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px 18px 18px 2px; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #0f172a; color: #f8fafc; }
+        .sidebar { background: #1e293b; border-right: 1px solid rgba(255,255,255,0.05); }
+        .channel-active { background: rgba(99, 102, 241, 0.2); color: #818cf8; border-left: 3px solid #6366f1; }
+        .alert-pulse { animation: pulse-red 1.5s infinite; }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        .glass-chat { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(10px); }
     </style>
 </head>
-<body class="flex h-screen overflow-hidden">
+<body class="flex h-screen">
 
-    <aside class="sidebar-glass w-20 lg:w-72 flex flex-col transition-all">
-        <div class="p-8">
-            <h2 class="text-white font-extrabold text-2xl tracking-tighter flex items-center gap-3">
-                <i data-lucide="layers" class="text-indigo-500"></i>
-                <span class="hidden lg:block">ORBITRON</span>
-            </h2>
-            <p class="text-[10px] text-slate-500 font-bold tracking-[0.3em] mt-2 hidden lg:block uppercase">Admin Suite v1.0</p>
+    <aside class="sidebar w-72 flex flex-col">
+        <div class="p-6 border-b border-white/5 flex items-center gap-3">
+            <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-black">EB</div>
+            <h1 class="font-black text-sm tracking-widest uppercase">Central CAC</h1>
         </div>
 
-        <nav class="flex-1 px-4 space-y-2">
-            <div class="px-4 py-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest hidden lg:block text-center">Menu Principal</div>
-            <a href="#" class="flex items-center gap-4 p-4 rounded-2xl bg-indigo-600/10 text-indigo-400 group">
-                <i data-lucide="message-circle"></i>
-                <span class="font-semibold hidden lg:block">Atendimentos</span>
-            </a>
-            <a href="#" class="flex items-center gap-4 p-4 rounded-2xl text-slate-500 hover:bg-white/5 transition-all group">
-                <i data-lucide="users"></i>
-                <span class="font-semibold hidden lg:block">Equipe Profissional</span>
-            </a>
-            <a href="#" class="flex items-center gap-4 p-4 rounded-2xl text-slate-500 hover:bg-white/5 transition-all group">
-                <i data-lucide="shield-check"></i>
-                <span class="font-semibold hidden lg:block">Segurança & Logs</span>
-            </a>
-        </nav>
+        <div class="flex-1 overflow-y-auto p-4 space-y-2">
+            <p class="text-[10px] font-bold text-slate-500 uppercase px-2 mb-4">Atendimentos Ativos</p>
+            <div id="lista-canais">
+                <p class="text-xs text-slate-600 italic px-2">Nenhum chamado no momento...</p>
+            </div>
+        </div>
 
-        <div class="p-6 mt-auto border-t border-white/5 bg-black/20">
-            <div class="flex items-center gap-4">
-                <div class="relative">
-                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-lg">D</div>
-                    <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-4 border-[#020617] rounded-full"></div>
-                </div>
-                <div class="hidden lg:block">
-                    <p class="text-sm font-bold text-white leading-none">Dono do Sistema</p>
-                    <p class="text-[10px] text-indigo-400 font-bold mt-1">SESSÃO ENCRYPTADA</p>
+        <div class="p-4 bg-black/20 mt-auto">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center font-bold" id="staff-avatar">?</div>
+                <div>
+                    <p class="text-xs font-bold" id="staff-nome">Carregando...</p>
+                    <p class="text-[10px] text-emerald-400 font-bold uppercase tracking-tighter" id="staff-rank">LEVEL --</p>
                 </div>
             </div>
         </div>
     </aside>
 
-    <section class="w-80 lg:w-96 border-r border-white/5 flex flex-col bg-slate-900/10">
-        <div class="p-8 border-b border-white/5">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="font-extrabold text-xl">Chats</h3>
-                <span id="chat-count" class="bg-indigo-600 text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-tighter">0 Ativos</span>
+    <main class="flex-1 flex flex-col relative">
+        <header class="h-16 border-b border-white/5 flex items-center px-8 justify-between glass-chat">
+            <div class="flex items-center gap-2">
+                <i data-lucide="hash" class="w-4 h-4 text-slate-500"></i>
+                <span class="font-bold text-sm" id="chat-atual-nome">Selecione um canal</span>
             </div>
-            <div class="relative">
-                <i data-lucide="search" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
-                <input type="text" placeholder="Filtrar clientes..." class="w-full bg-black/20 border border-white/5 rounded-xl py-3 pl-12 text-xs focus:outline-none focus:border-indigo-500 transition-all">
-            </div>
-        </div>
-        
-        <div id="admin-chat-list" class="flex-1 overflow-y-auto custom-scrollbar">
-            </div>
-    </section>
-
-    <main class="flex-1 flex flex-col relative bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]">
-        
-        <header class="p-6 md:p-8 border-b border-white/5 flex justify-between items-center bg-slate-900/40 backdrop-blur-md">
-            <div class="flex items-center gap-5">
-                <div id="active-client-icon" class="w-14 h-14 rounded-[1.2rem] bg-slate-800 flex items-center justify-center border border-white/10 text-slate-400">
-                    <i data-lucide="user"></i>
-                </div>
-                <div>
-                    <h4 id="active-client-name" class="font-bold text-lg text-white">Selecione um cliente</h4>
-                    <div class="flex items-center gap-2 mt-1">
-                        <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500" id="active-client-status">Aguardando Seleção</span>
-                    </div>
-                </div>
-            </div>
-            <div class="flex gap-3">
-                <button class="p-3 bg-white/5 hover:bg-white/10 rounded-xl text-slate-300 transition-all"><i data-lucide="info"></i></button>
-                <button class="px-6 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl text-xs font-bold transition-all border border-red-500/20">ENCERRAR CASO</button>
-            </div>
+            <div id="badge-alerta" class="hidden px-3 py-1 bg-red-500 rounded-full text-[10px] font-black animate-bounce">SOLICITOU SUPERIOR</div>
         </header>
 
-        <div id="admin-messages" class="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar">
-            <div class="flex flex-col items-center opacity-20 py-10">
-                <i data-lucide="shield-check" class="w-12 h-12 mb-4"></i>
-                <p class="text-xs font-bold uppercase tracking-[0.3em]">Ambiente de Atendimento Seguro</p>
+        <div id="chat-content" class="flex-1 overflow-y-auto p-8 space-y-4 custom-scroll">
             </div>
-        </div>
 
-        <footer class="p-8 bg-gradient-to-t from-black/40 to-transparent">
-            <div class="max-w-4xl mx-auto relative group">
-                <textarea id="admin-input" rows="1" placeholder="Escreva uma resposta oficial e profissional..." 
-                    class="w-full bg-slate-900/80 border border-white/10 rounded-2xl py-5 pl-6 pr-40 text-sm focus:outline-none focus:border-indigo-500 transition-all resize-none shadow-2xl"></textarea>
-                
-                <div class="absolute right-3 bottom-3 flex gap-2">
-                    <button class="p-3 text-slate-500 hover:text-white transition-colors"><i data-lucide="paperclip" class="w-5 h-5"></i></button>
-                    <button id="send-admin-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-8 rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-indigo-600/20">
-                        RESPONDER <i data-lucide="send" class="w-4 h-4"></i>
-                    </button>
+        <footer class="p-6">
+            <div class="relative max-w-5xl mx-auto">
+                <input id="input-msg" type="text" placeholder="Escreva para o player..." 
+                    class="w-full bg-slate-800 border border-white/5 rounded-xl py-4 px-6 text-sm focus:outline-none focus:border-indigo-500 transition-all">
+                <div class="absolute right-3 top-2 flex gap-2">
+                    <button onclick="enviarComando('/off')" class="bg-red-500/20 hover:bg-red-500/40 text-red-400 px-3 py-2 rounded-lg text-[10px] font-black uppercase">/off</button>
+                    <button onclick="enviarComando('/concluir')" class="bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-400 px-3 py-2 rounded-lg text-[10px] font-black uppercase">/concluir</button>
                 </div>
             </div>
         </footer>
     </main>
 
     <script>
-        lucide.createIcons();
         const socket = io();
-        let currentClientId = null;
+        let meuEmail = "atendente@eb.com"; // Deve vir do login
+        let ticketSelecionado = null;
 
-        socket.emit('admin_join');
-
-        // Atualiza Lista de Clientes
-        socket.on('update_admin_list', (chats) => {
-            const list = document.getElementById('admin-chat-list');
-            document.getElementById('chat-count').innerText = `${chats.length} Ativos`;
-            
-            list.innerHTML = chats.map(chat => `
-                <div onclick="selectChat('${chat.id}')" class="chat-card p-6 cursor-pointer border-b border-white/5 ${currentClientId === chat.id ? 'chat-active' : ''}">
-                    <div class="flex justify-between items-start mb-2">
-                        <span class="text-sm font-bold text-white tracking-tight">ID: #${chat.id.substring(0,8)}</span>
-                        <span class="text-[9px] bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded font-black uppercase">Online</span>
-                    </div>
-                    <p class="text-xs text-slate-500 font-medium">Clique para abrir canal de comunicação direta.</p>
-                </div>
-            `).join('');
-        });
-
-        function selectChat(id) {
-            currentClientId = id;
-            document.getElementById('active-client-name').innerText = `Cliente #${id.substring(0,8)}`;
-            document.getElementById('active-client-status').innerText = `Canal de Resposta Aberto`;
-            document.getElementById('active-client-status').classList.replace('text-slate-500', 'text-emerald-400');
-            document.getElementById('active-client-icon').classList.replace('bg-slate-800', 'bg-indigo-600');
-            document.getElementById('active-client-icon').innerHTML = `<i data-lucide="message-square" class="text-white"></i>`;
+        socket.on('novo_ticket_painel', (ticket) => {
+            const lista = document.getElementById('lista-canais');
+            const canal = document.createElement('div');
+            canal.id = `canal-${ticket.id}`;
+            canal.className = `flex items-center gap-2 p-3 rounded-lg cursor-pointer hover:bg-white/5 transition-all mb-1 ${ticket.alerta ? 'alert-pulse border border-red-500/50' : ''}`;
+            canal.onclick = () => selecionarTicket(ticket.id);
+            canal.innerHTML = `<i data-lucide="hash" class="w-4 h-4 text-slate-500"></i> <span class="text-sm font-semibold">${ticket.nick}</span>`;
+            lista.appendChild(canal);
             lucide.createIcons();
-            
-            // Marca o item na lista como selecionado visualmente
-            socket.emit('admin_join'); // Atualiza a lista para refletir o active
-        }
-
-        function appendAdminMsg(text, type) {
-            const box = document.getElementById('admin-messages');
-            const div = document.createElement('div');
-            div.className = `flex ${type === 'admin' ? 'justify-end' : 'justify-start'} w-full animate-in slide-in-from-bottom-2`;
-            
-            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            
-            if(type === 'admin') {
-                div.innerHTML = `<div class="message-bubble-admin p-4 max-w-md text-sm text-white shadow-xl">${text}<span class="block text-[9px] text-indigo-200 mt-2 font-bold uppercase tracking-widest text-right">${time} · Você</span></div>`;
-            } else {
-                div.innerHTML = `<div class="message-bubble-client p-4 max-w-md text-sm text-slate-300 border border-white/5">${text}<span class="block text-[9px] text-slate-500 mt-2 font-bold uppercase tracking-widest">${time} · Cliente</span></div>`;
-            }
-            
-            box.appendChild(div);
-            box.scrollTo({ top: box.scrollHeight, behavior: 'smooth' });
-        }
-
-        document.getElementById('send-admin-btn').addEventListener('click', () => {
-            const input = document.getElementById('admin-input');
-            if(input.value.trim() && currentClientId) {
-                socket.emit('admin_send_msg', { 
-                    clientId: currentClientId, 
-                    text: input.value,
-                    adminName: 'Proprietário' 
-                });
-                appendAdminMsg(input.value, 'admin');
-                input.value = '';
-            } else if (!currentClientId) {
-                alert("ERRO: Selecione um cliente ativo para responder.");
-            }
         });
 
-        socket.on('admin_receive_msg', (data) => {
-            if(data.clientId === currentClientId) {
-                appendAdminMsg(data.text, 'client');
-            }
+        function selecionarTicket(id) {
+            ticketSelecionado = id;
+            document.querySelectorAll('[id^="canal-"]').forEach(el => el.classList.remove('channel-active'));
+            document.getElementById(`canal-${id}`).classList.add('channel-active');
+            socket.emit('atender_player', { ticketId: id, staffEmail: meuEmail });
+            document.getElementById('chat-atual-nome').innerText = id;
+        }
+
+        function enviarComando(cmd) {
+            if (!ticketSelecionado) return;
+            socket.emit('enviar_mensagem', { ticketId: ticketSelecionado, texto: cmd, remetente: 'STAFF' });
+        }
+
+        socket.on('receber_mensagem', (data) => {
+            const content = document.getElementById('chat-content');
+            content.innerHTML += `<div class="p-3 bg-slate-800/50 rounded-lg text-sm"><b class="text-indigo-400">${data.remetente}:</b> ${data.texto}</div>`;
+            content.scrollTop = content.scrollHeight;
         });
+
+        lucide.createIcons();
     </script>
 </body>
 </html>
