@@ -3,165 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CENTRAL DE SUPORTE | ORBITRON</title>
+    <title>CENTRAL ORBITRON</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <script src="/firebase-config.js"></script>
     <style>
-        :root {
-            --bg-main: #313338;
-            --bg-card: #2b2d31;
-            --discord-blue: #5865F2;
-            --discord-green: #23a559;
-            --text-muted: #b5bac1;
-        }
-
-        body {
-            margin: 0;
-            background: var(--bg-main);
-            color: white;
-            font-family: 'gg sans', 'Noto Sans', sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-        }
-
-        .container {
-            background: var(--bg-card);
-            width: 100%;
-            max-width: 480px;
-            padding: 32px;
-            border-radius: 8px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-            text-align: center;
-        }
-
-        h1 { font-size: 24px; margin-bottom: 8px; font-weight: 700; }
-        p { color: var(--text-muted); margin-bottom: 24px; font-size: 16px; }
-
-        .input-group { text-align: left; margin-bottom: 20px; }
-        label { display: block; color: var(--text-muted); font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+        :root { --bg: #313338; --card: #2b2d31; --blue: #5865F2; --green: #23a559; --text: #dbdee1; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'gg sans', sans-serif; }
+        body { background: var(--bg); color: white; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
         
-        input {
-            width: 100%;
-            padding: 10px;
-            background: #1e1f22;
-            border: none;
-            border-radius: 3px;
-            color: white;
-            font-size: 16px;
-            outline: none;
-        }
+        .container { background: var(--card); padding: 40px; border-radius: 16px; width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: center; transition: 0.3s; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .btn-primary {
-            width: 100%;
-            background: var(--discord-blue);
-            color: white;
-            padding: 12px;
-            border: none;
-            border-radius: 3px;
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: 0.2s;
-            margin-bottom: 16px;
-        }
-        .btn-primary:hover { background: #4752c4; }
+        input { width: 100%; padding: 14px; background: #1e1f22; border: none; border-radius: 8px; color: white; margin-bottom: 20px; outline: none; }
+        .btn { width: 100%; padding: 14px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-blue { background: var(--blue); color: white; margin-bottom: 15px; }
+        .btn-blue:hover { background: #4752c4; transform: scale(1.02); }
 
-        .divider {
-            height: 1px;
-            background: #3f4147;
-            margin: 20px 0;
-            position: relative;
-        }
-
-        .footer-text { font-size: 14px; color: var(--text-muted); }
-        .link-admin {
-            color: #00a8fc;
-            text-decoration: none;
-            cursor: pointer;
-            font-weight: 500;
-        }
-        .link-admin:hover { text-decoration: underline; }
-
-        /* Estilo do Chat quando aberto */
-        #chat-section { display: none; }
+        /* Chat e Estrelas */
+        #chat-area { display: none; text-align: left; }
+        .msgs { height: 250px; overflow-y: auto; background: #1e1f22; border-radius: 12px; padding: 15px; margin-bottom: 10px; }
+        .stars { font-size: 35px; color: #4e5058; margin: 20px 0; }
+        .stars span { cursor: pointer; transition: 0.2s; }
+        .stars span.active { color: #faa61a; text-shadow: 0 0 10px rgba(250, 166, 26, 0.5); }
     </style>
 </head>
 <body>
 
-    <div class="container" id="main-box">
-        <div id="ticket-section">
-            <h1>Precisa de ajuda?</h1>
-            <p>Abra um chamado agora com a Staff Orbitron.</p>
-            
-            <div class="input-group">
-                <label>Seu Nick no Discord</label>
-                <input type="text" id="player-nick" placeholder="Ex: cay#0001">
-            </div>
-
-            <button class="btn-primary" onclick="abrirChamado()">Abrir Ticket</button>
-
-            <div class="divider"></div>
-
-            <p class="footer-text">
-                É um militar da Staff? 
-                <span class="link-admin" onclick="window.location.href='/login'">ENTRAR COMO CAC</span>
-            </p>
+    <div class="container" id="box">
+        <div id="setup-area">
+            <h1 style="margin-bottom: 10px;">Suporte Orbitron</h1>
+            <p style="color: #b5bac1; margin-bottom: 30px;">Inicie seu atendimento militar abaixo.</p>
+            <input type="text" id="player-nick" placeholder="Seu Nick no Discord">
+            <button class="btn btn-blue" onclick="abrirTicket()">PRECISO DE AJUDA</button>
+            <p style="font-size: 13px; color: #b5bac1;">Staff? <span style="color: #00a8fc; cursor: pointer;" onclick="window.location.href='/login'">ENTRAR COMO CAC</span></p>
         </div>
 
-        <div id="chat-section">
-            <h1 id="atendimento-titulo">Aguardando Staff...</h1>
-            <div id="msg-container" style="height: 200px; overflow-y: auto; background: #1e1f22; padding: 10px; border-radius: 3px; text-align: left; margin-bottom: 10px;"></div>
-            <input type="text" id="msg-input" placeholder="Conversar com Staff..." onkeypress="if(event.key==='Enter') enviarMsg()">
+        <div id="chat-area">
+            <h3 id="atend-nome" style="margin-bottom: 15px;">Aguardando...</h3>
+            <div class="msgs" id="msg-box"></div>
+            <input type="text" id="player-input" placeholder="Diga algo..." onkeypress="if(event.key==='Enter') enviarMsg()">
+        </div>
+
+        <div id="eval-area" style="display:none;">
+            <h2>Avalie o Atendimento</h2>
+            <div class="stars" id="star-list">
+                <span onclick="setStar(1)">★</span><span onclick="setStar(2)">★</span><span onclick="setStar(3)">★</span><span onclick="setStar(4)">★</span><span onclick="setStar(5)">★</span>
+            </div>
+            <button class="btn btn-blue" style="background: var(--green);" onclick="confirmarAvaliacao()">ENVIAR AVALIAÇÃO</button>
         </div>
     </div>
 
     <script>
-        let meuTicketId = null;
+        let ticketId = null;
+        let rating = 0;
 
-        function abrirChamado() {
+        function abrirTicket() {
             const nick = document.getElementById('player-nick').value;
-            if(!nick) return alert("Digite seu nick!");
-
+            if(!nick) return;
             const ref = db.ref('tickets').push();
-            meuTicketId = ref.key;
+            ticketId = ref.key;
+            
+            // Mensagem Automática Inicial
+            ref.set({ nick: nick, status: 'aberto', criadoEm: Date.now() });
+            ref.child('mensagens').push({ autor: 'SISTEMA', texto: `Olá ${nick}, a Staff Orbitron foi notificada. Aguarde um instante.` });
 
-            ref.set({
-                nick: nick,
-                status: 'aberto',
-                timestamp: Date.now()
-            }).then(() => {
-                document.getElementById('ticket-section').style.display = 'none';
-                document.getElementById('chat-section').style.display = 'block';
-                document.getElementById('atendimento-titulo').innerText = "Atendimento: " + nick;
-                iniciarEscuta();
+            document.getElementById('setup-area').style.display = 'none';
+            document.getElementById('chat-area').style.display = 'block';
+            escutar();
+        }
+
+        function escutar() {
+            db.ref('tickets/' + ticketId).on('value', snap => {
+                const t = snap.val();
+                if(t && t.status === 'avaliando') {
+                    document.getElementById('chat-area').style.display = 'none';
+                    document.getElementById('eval-area').style.display = 'block';
+                }
+            });
+            db.ref('tickets/' + ticketId + '/mensagens').on('child_added', snap => {
+                const m = snap.val();
+                const p = document.createElement('div');
+                p.style.marginBottom = "8px";
+                p.innerHTML = `<b style="color:${m.autor==='SISTEMA'?'#faa61a':m.autor==='staff'?'#5865f2':'#23a559'}">${m.autor}:</b> ${m.texto}`;
+                document.getElementById('msg-box').appendChild(p);
+                document.getElementById('msg-box').scrollTop = document.getElementById('msg-box').scrollHeight;
             });
         }
 
-        function iniciarEscuta() {
-            db.ref('tickets/' + meuTicketId + '/mensagens').on('child_added', snap => {
-                const m = snap.val();
-                const div = document.createElement('div');
-                div.style.marginBottom = "8px";
-                div.innerHTML = `<span style="color:${m.autor === 'staff' ? '#5865F2' : '#23a559'}; font-weight:bold;">${m.autor.toUpperCase()}:</span> <span style="color:#dbdee1;">${m.texto}</span>`;
-                const container = document.getElementById('msg-container');
-                container.appendChild(div);
-                container.scrollTop = container.scrollHeight;
+        function setStar(n) {
+            rating = n;
+            document.querySelectorAll('.stars span').forEach((s, i) => s.classList.toggle('active', i < n));
+        }
+
+        function confirmarAvaliacao() {
+            if(rating === 0) return alert("Selecione as estrelas!");
+            db.ref('tickets/' + ticketId).once('value', snap => {
+                const t = snap.val();
+                const bonus = 1 + (rating * 0.3);
+                db.ref('usuarios/' + t.atendidoPor + '/pontos').transaction(p => (p || 0) + bonus);
+                db.ref('tickets/' + ticketId).remove().then(() => {
+                    alert("Obrigado! Pontuação atribuída ao militar.");
+                    window.location.reload();
+                });
             });
         }
 
         function enviarMsg() {
-            const inp = document.getElementById('msg-input');
-            if(!inp.value || !meuTicketId) return;
-
-            db.ref('tickets/' + meuTicketId + '/mensagens').push({
-                autor: 'player',
-                texto: inp.value,
-                timestamp: Date.now()
-            });
-            inp.value = "";
+            const i = document.getElementById('player-input');
+            if(i.value) db.ref('tickets/' + ticketId + '/mensagens').push({ autor: 'player', texto: i.value });
+            i.value = "";
         }
     </script>
 </body>
