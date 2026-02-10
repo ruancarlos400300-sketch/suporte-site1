@@ -2,31 +2,125 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | Orbitron</title>
-    <link rel="stylesheet" href="/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Acesso CAC | Orbitron EB</title>
     <script src="/socket.io/socket.io.js"></script>
+    <style>
+        /* CSS INTERNO PARA PRIORIDADE MÁXIMA */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        
+        body { 
+            background-color: #020617; 
+            color: white; 
+            height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+
+        .login-card {
+            width: 90%;
+            max-width: 400px;
+            background: #0f172a;
+            padding: 40px;
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 22px;
+            font-weight: 900;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #5865F2;
+        }
+
+        input {
+            width: 100%;
+            background: #020617;
+            border: 1px solid #334155;
+            padding: 18px;
+            border-radius: 15px;
+            color: white;
+            margin-bottom: 15px;
+            outline: none;
+            font-size: 16px;
+        }
+
+        input:focus { border-color: #5865F2; }
+
+        .btn-entrar {
+            width: 100%;
+            background-color: #ffffff; /* Segue o padrão do botão CAC da home */
+            color: #000000;
+            padding: 18px;
+            border-radius: 15px;
+            border: none;
+            font-weight: 900;
+            font-size: 16px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: 0.3s;
+        }
+
+        .btn-entrar:hover { background-color: #e2e8f0; }
+
+        .voltar {
+            display: block;
+            margin-top: 20px;
+            color: #64748b;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+    </style>
 </head>
-<body class="screen-full">
-    <div class="chat-container" style="max-width:400px; height:auto; padding:3rem; gap:1.5rem;">
-        <h2 style="font-weight:900; letter-spacing:2px; color:#6366f1;">LOGIN CAC</h2>
-        <input type="email" id="email" placeholder="E-MAIL">
-        <input type="password" id="senha" placeholder="SENHA">
-        <button class="btn-main" onclick="entrar()">ACESSAR SISTEMA</button>
+<body>
+
+    <div class="login-card">
+        <h2>Acesso CAC</h2>
+        
+        <input type="email" id="email" placeholder="E-mail Funcional">
+        <input type="password" id="senha" placeholder="Senha de Acesso">
+        
+        <button class="btn-entrar" onclick="fazerLogin()">
+            Autenticar
+        </button>
+
+        <a href="/index.html" class="voltar">Voltar ao Início</a>
     </div>
 
     <script>
         const socket = io();
-        function entrar() {
+
+        function fazerLogin() {
             const email = document.getElementById('email').value;
             const senha = document.getElementById('senha').value;
+
+            if(!email || !senha) return alert("Preencha as credenciais.");
+
             socket.emit('tentar_login', { email, senha });
         }
-        socket.on('login_sucesso', (d) => {
-            localStorage.setItem('user_email', d.email);
-            window.location.href = (d.cargo === 'DONO') ? '/dono.html' : '/admin.html';
+
+        socket.on('login_sucesso', (dados) => {
+            // Armazena o e-mail para persistência no navegador
+            localStorage.setItem('user_email', dados.email);
+            
+            // Redireciona com base no cargo
+            if (dados.cargo === 'DONO') {
+                window.location.href = '/dono.html';
+            } else {
+                window.location.href = '/admin.html';
+            }
         });
-        socket.on('login_erro', (m) => alert(m));
+
+        socket.on('login_erro', (mensagem) => {
+            alert("ERRO DE AUTENTICAÇÃO: " + mensagem);
+        });
     </script>
 </body>
 </html>
