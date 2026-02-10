@@ -2,59 +2,86 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>SUPORTE | ORBITRON</title>
+    <title>STAFF | ORBITRON</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <script src="/firebase-config.js"></script>
     <style>
-        body { background:#020617; color:white; font-family:sans-serif; text-align:center; padding-top:100px; }
-        .btn { background:#5865F2; color:white; padding:20px 40px; border-radius:50px; border:none; font-weight:bold; cursor:pointer; font-size:18px; }
-        #chat-player { width:350px; margin:20px auto; background:#0f172a; padding:20px; border-radius:10px; display:none; border:1px solid #1e293b; }
-        .msgs { height:200px; overflow-y:auto; text-align:left; margin-bottom:10px; }
-        input { width:100%; padding:10px; border-radius:5px; border:none; }
+        body { background:#020617; color:white; font-family:sans-serif; display:flex; height:100vh; margin:0; }
+        aside { width:280px; background:#0f172a; border-right:1px solid #1e293b; padding:20px; }
+        main { flex:1; padding:20px; display:flex; flex-direction:column; }
+        #chat { flex:1; background:rgba(0,0,0,0.2); border-radius:10px; padding:15px; overflow-y:auto; margin-bottom:10px; border:1px solid #1e293b; }
+        .ticket { background:#1e293b; padding:10px; margin-bottom:5px; border-radius:5px; cursor:pointer; }
+        input { width:100%; padding:15px; background:#0f172a; border:1px solid #334155; color:white; border-radius:5px; }
+        .msg-staff { text-align:right; color:#5865F2; margin-bottom:5px; }
+        .msg-player { text-align:left; color:#10b981; margin-bottom:5px; }
     </style>
 </head>
 <body>
-    <div id="inicial">
-        <h1>SUPORTE ORBITRON</h1>
-        <button class="btn" onclick="comecar()">COMEÇAR ATENDIMENTO</button>
-    </div>
-
-    <div id="chat-player">
-        <div class="msgs" id="msgs"></div>
-        <input type="text" id="msg-input" placeholder="Diga algo...">
-    </div>
+    <aside>
+        <h2 id="nome-militar">...</h2>
+        <p>Pontos: <span id="pts-militar">0</span></p>
+        <hr style="margin:20px 0; border:0; border-top:1px solid #1e293b;">
+        <div id="lista-tickets"></div>
+        <button onclick="auth.signOut()" style="width:100%; margin-top:20px; cursor:pointer;">Sair</button>
+    </aside>
+    <main>
+        <h3 id="ticket-nome">Selecione um chamado</h3>
+        <div id="chat"></div>
+        <input type="text" id="campo-msg" placeholder="Digite e aperte Enter">
+    </main>
 
     <script>
-        let meuTicket = null;
+        let ticketId = null;
 
-        function comecar() {
-            const n = prompt("Seu Nick:");
-            if(!n) return;
-            
-            const ref = db.ref('tickets').push();
-            meuTicket = ref.key;
-            ref.set({ nick: n, status: 'aberto' }).then(() => {
-                document.getElementById('inicial').style.display = 'none';
-                document.getElementById('chat-player').style.display = 'block';
-                escutarMensagens();
-            });
-        }
+        // Trava e Dados do Staff
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                db.ref('usuarios/' + user.uid).on('value', snap => {
+                    const d = snap.val();
+                    if (!d || (d.cargo !== 'dono' && d.cargo !== 'admin')) window.location.href = '/login.html';
+                    document.getElementById('nome-militar').innerText = d.nome;
+                    document.getElementById('pts-militar').innerText = d.pontos;
+                });
+            } else { window.location.href = '/login.html'; }
+        });
 
-        function escutarMensagens() {
-            db.ref('tickets/' + meuTicket + '/mensagens').on('child_added', snap => {
-                const m = snap.val();
+        // Lista de Chamados
+        db.ref('tickets').on('value', snap => {
+            const lista = document.getElementById('lista-tickets');
+            lista.innerHTML = "";
+            snap.forEach(t => {
                 const div = document.createElement('div');
-                div.innerHTML = `<b>${m.autor}:</b> ${m.texto}`;
-                document.getElementById('msgs').appendChild(div);
+                div.className = 'ticket';
+                div.innerText = t.val().nick;
+                div.onclick = () => carregarChat(t.key, t.val().nick);
+                lista.appendChild(div);
+            });
+        });
+
+        function carregarChat(id, nick) {
+            ticketId = id;
+            document.getElementById('ticket-nome').innerText = "Atendendo: " + nick;
+            const chatBox = document.getElementById('chat');
+            chatBox.innerHTML = "";
+            db.ref('tickets/' + id + '/mensagens').off();
+            db.ref('tickets/' + id + '/mensagens').on('child_added', snap => {
+                const m = snap.val();
+                const p = document.createElement('p');
+                p.className = m.autor === 'staff' ? 'msg-staff' : 'msg-player';
+                p.innerHTML = `<b>${m.autor}:</b> ${m.texto}`;
+                chatBox.appendChild(p);
+                chatBox.scrollTop = chatBox.scrollHeight;
             });
         }
 
-        document.getElementById('msg-input').addEventListener('keypress', e => {
-            if (e.key === 'Enter' && meuTicket) {
-                db.ref('tickets/' + meuTicket + '/mensagens').push({
-                    autor: 'player',
-                    texto: e.target.value
+        document.getElementById('campo-msg').addEventListener('keypress', e => {
+            if (e.key === 'Enter' && ticketId) {
+                db.ref('tickets/' + ticketId + '/mensagens').push({
+                    autor: 'staff',
+                    texto: e.target.value,
+                    timestamp: Date.now()
                 });
                 e.target.value = "";
             }
