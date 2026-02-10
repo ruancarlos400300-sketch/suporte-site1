@@ -2,97 +2,94 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>ADMIN | ORBITRON EB</title>
+    <title>CENTRAL CAC | STAFF</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <script src="/firebase-config.js"></script>
     <style>
-        body { background:#020617; color:white; font-family:sans-serif; display:flex; height:100vh; margin:0; }
-        aside { width:300px; background:#0f172a; border-right:1px solid #1e293b; padding:20px; }
-        main { flex:1; padding:20px; display:flex; flex-direction:column; }
-        .perfil { background:#1e293b; padding:15px; border-radius:10px; margin-bottom:20px; }
-        #chat { flex:1; background:rgba(255,255,255,0.05); border-radius:10px; padding:15px; overflow-y:auto; margin-bottom:15px; }
-        .ticket-item { background:#1e293b; padding:10px; margin-bottom:5px; border-radius:5px; cursor:pointer; }
-        input { width:100%; padding:15px; background:#0f172a; border:1px solid #334155; color:white; border-radius:10px; }
-        .msg { margin-bottom:10px; padding:8px; border-radius:5px; }
-        .msg-staff { background:#5865F2; text-align:right; }
-        .msg-player { background:#334155; text-align:left; }
+        body { background: #313338; color: white; font-family: sans-serif; display: flex; height: 100vh; margin: 0; }
+        aside { width: 280px; background: #2b2d31; padding: 20px; border-right: 2px solid #1e1f22; }
+        main { flex: 1; display: flex; flex-direction: column; }
+        .card { background: #232428; border-radius: 12px; padding: 15px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
+        .card:hover { transform: translateX(5px); background: #35373c; }
+        #chat { flex: 1; padding: 30px; overflow-y: auto; }
+        .input-box { padding: 20px; background: #2b2d31; border-top: 1px solid #1e1f22; display: flex; gap: 10px; }
+        input { flex: 1; background: #383a40; border: none; padding: 15px; border-radius: 8px; color: white; outline: none; }
+        .status-bar { padding: 15px; background: #232428; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #5865f2; }
     </style>
 </head>
 <body>
     <aside>
-        <div class="perfil">
-            <h4 id="nome-militar">Carregando...</h4>
-            <p style="color:#10b981;">PTS: <span id="pts-militar">0</span></p>
+        <div class="status-bar">
+            <h4 id="my-name">...</h4>
+            <p style="font-size: 12px; color: #23a559;">PONTOS: <span id="my-pts">0</span></p>
         </div>
-        <div id="lista-tickets"></div>
-        <button onclick="auth.signOut()" style="margin-top:20px; background:red; color:white; border:none; padding:10px; width:100%; border-radius:5px; cursor:pointer;">SAIR</button>
+        <div id="ticket-list"></div>
     </aside>
-
     <main>
-        <h3 id="status-chat">Selecione um Chamado</h3>
         <div id="chat"></div>
-        <input type="text" id="msg-input" placeholder="Digite sua resposta e aperte ENTER...">
+        <div class="input-box">
+            <input type="text" id="staff-input" placeholder="Digite /concluir para finalizar ou /off para sair...">
+        </div>
     </main>
 
     <script>
-        let ticketAtivo = null;
+        let activeTicket = null;
+        let myUID = null;
 
-        // TRAVA DE SEGURANÇA E CARREGAMENTO DE PONTOS
         auth.onAuthStateChanged(user => {
-            if (user) {
+            if(user) {
+                myUID = user.uid;
                 db.ref('usuarios/' + user.uid).on('value', snap => {
                     const d = snap.val();
-                    if (!d || (d.cargo !== 'dono' && d.cargo !== 'admin')) {
-                        window.location.href = 'login.html';
-                    } else {
-                        document.getElementById('nome-militar').innerText = d.nome;
-                        document.getElementById('pts-militar').innerText = d.pontos;
-                    }
+                    document.getElementById('my-name').innerText = d.nome;
+                    document.getElementById('my-pts').innerText = d.pontos.toFixed(1);
                 });
-            } else { window.location.href = 'login.html'; }
+            } else { window.location.href = '/login'; }
         });
 
-        // LISTAR TICKETS
         db.ref('tickets').on('value', snap => {
-            const lista = document.getElementById('lista-tickets');
-            lista.innerHTML = "";
-            snap.forEach(ticket => {
-                const t = ticket.val();
-                const div = document.createElement('div');
-                div.className = 'ticket-item';
-                div.innerHTML = `<strong>${t.nick}</strong>`;
-                div.onclick = () => abrirChat(ticket.key, t.nick);
-                lista.appendChild(div);
+            const list = document.getElementById('ticket-list');
+            list.innerHTML = "";
+            snap.forEach(t => {
+                if(t.val().status === 'aberto') {
+                    const div = document.createElement('div');
+                    div.className = 'card';
+                    div.innerHTML = `<b>${t.val().nick}</b><br><small>Aguardando...</small>`;
+                    div.onclick = () => selectTicket(t.key, t.val().nick);
+                    list.appendChild(div);
+                }
             });
         });
 
-        function abrirChat(id, nick) {
-            ticketAtivo = id;
-            document.getElementById('status-chat').innerText = "Atendendo: " + nick;
-            const chatDiv = document.getElementById('chat');
-            chatDiv.innerHTML = "";
-            
-            db.ref('tickets/' + id + '/mensagens').off(); // Limpa ouvintes antigos
+        function selectTicket(id, nick) {
+            activeTicket = id;
+            document.getElementById('chat').innerHTML = `<h3>Atendendo: ${nick}</h3><hr style="opacity:0.1;margin:10px 0;">`;
             db.ref('tickets/' + id + '/mensagens').on('child_added', snap => {
                 const m = snap.val();
-                const msgDiv = document.createElement('div');
-                msgDiv.className = m.autor === 'staff' ? 'msg msg-staff' : 'msg msg-player';
-                msgDiv.innerHTML = `<b>${m.autor.toUpperCase()}:</b> ${m.texto}`;
-                chatDiv.appendChild(msgDiv);
-                chatDiv.scrollTop = chatDiv.scrollHeight;
+                const p = document.createElement('div');
+                p.style.textAlign = m.autor === 'staff' ? 'right' : 'left';
+                p.innerHTML = `<span style="display:inline-block;padding:8px 12px;border-radius:12px;background:${m.autor==='staff'?'#5865f2':'#383a40'};margin:4px;">${m.texto}</span>`;
+                document.getElementById('chat').appendChild(p);
+                document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
             });
         }
 
-        document.getElementById('msg-input').addEventListener('keypress', e => {
-            if (e.key === 'Enter' && ticketAtivo) {
-                const txt = e.target.value;
-                db.ref('tickets/' + ticketAtivo + '/mensagens').push({
-                    autor: 'staff',
-                    texto: txt,
-                    timestamp: Date.now()
-                });
+        document.getElementById('staff-input').addEventListener('keypress', e => {
+            if(e.key === 'Enter') {
+                const val = e.target.value.toLowerCase();
+                if(val === '/concluir') {
+                    if(!activeTicket) return;
+                    db.ref('tickets/' + activeTicket).update({ status: 'avaliando', atendidoPor: myUID });
+                    activeTicket = null;
+                    document.getElementById('chat').innerHTML = "<h1>Ticket enviado para avaliação.</h1>";
+                } else if(val === '/off') {
+                    if(activeTicket) return alert("Conclua o ticket antes de sair!");
+                    auth.signOut();
+                } else if(activeTicket) {
+                    db.ref('tickets/' + activeTicket + '/mensagens').push({ autor: 'staff', texto: e.target.value });
+                }
                 e.target.value = "";
             }
         });
