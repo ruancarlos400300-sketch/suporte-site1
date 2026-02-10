@@ -2,163 +2,36 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orbitron | High-Fidelity Support</title>
+    <title>Login CAC | Orbitron</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="/socket.io/socket.io.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    
-    <style>
-        :root {
-            --primary: #6366f1;
-            --secondary: #a855f7;
-            --accent: #22d3ee;
-        }
-
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #020617;
-            background-image: 
-                radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 100% 100%, rgba(168, 85, 247, 0.15) 0%, transparent 50%);
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0;
-        }
-
-        /* Efeito de Vidro de Alta Definição */
-        .glass-master {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(40px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.7);
-        }
-
-        .chat-container {
-            width: 100%;
-            max-width: 480px;
-            height: 85vh;
-            border-radius: 3rem;
-            display: flex;
-            flex-col: column;
-            overflow: hidden;
-            position: relative;
-        }
-
-        /* Estilização de Mensagens Premium */
-        .msg-bubble {
-            max-width: 85%;
-            padding: 1.25rem;
-            font-size: 0.875rem;
-            line-height: 1.5;
-            position: relative;
-            transition: all 0.3s ease;
-        }
-
-        .msg-client {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            color: white;
-            border-radius: 2rem 2rem 0.5rem 2rem;
-            align-self: flex-end;
-            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4);
-        }
-
-        .msg-system {
-            background: rgba(30, 41, 59, 0.5);
-            color: #cbd5e1;
-            border-radius: 2rem 2rem 2rem 0.5rem;
-            align-self: flex-start;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        /* Animações e Scroll */
-        .custom-scroll::-webkit-scrollbar { width: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-        
-        .animate-float { animation: float 6s ease-in-out infinite; }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;800&display=swap" rel="stylesheet">
 </head>
-<body>
-
-    <div class="chat-container glass-master flex flex-col">
-        <div class="p-8 flex items-center justify-between border-b border-white/5 bg-white/5">
-            <div class="flex items-center gap-4">
-                <div class="relative">
-                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-500 to-cyan-400 p-0.5 animate-float">
-                        <div class="w-full h-full bg-slate-900 rounded-[calc(1rem-2px)] flex items-center justify-center">
-                            <i data-lucide="cpu" class="text-cyan-400 w-7 h-7"></i>
-                        </div>
-                    </div>
-                    <span class="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-4 border-slate-900 rounded-full"></span>
-                </div>
-                <div>
-                    <h1 class="text-white font-extrabold text-xl tracking-tighter italic">ORBITRON</h1>
-                    <div class="flex items-center gap-2">
-                        <p class="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">Sessão de Luxo</p>
-                    </div>
-                </div>
-            </div>
-            <div class="flex gap-2">
-                <button class="p-2 text-slate-500 hover:text-white transition-colors"><i data-lucide="settings" class="w-5 h-5"></i></button>
-            </div>
+<body class="bg-slate-950 h-screen flex items-center justify-center font-['Plus_Jakarta_Sans']">
+    <div class="w-full max-w-sm p-8 bg-slate-900 rounded-[2.5rem] border border-white/5 shadow-2xl">
+        <div class="text-center mb-10">
+            <h1 class="text-indigo-500 font-black text-2xl italic">ORBITRON</h1>
+            <p class="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em]">Autenticação Militar</p>
         </div>
-
-        <div id="chat-box" class="flex-1 overflow-y-auto p-8 flex flex-col gap-6 custom-scroll">
-            <div class="msg-bubble msg-system animate-in fade-in slide-in-from-bottom-4 duration-700">
-                Bem-vindo ao canal prioritário. Como podemos elevar o seu negócio hoje?
-                <span class="block text-[9px] mt-2 font-bold opacity-50 uppercase tracking-widest text-left">Orbitron System • Agora</span>
-            </div>
-        </div>
-
-        <div class="p-8 bg-gradient-to-t from-black/20 to-transparent">
-            <form id="chat-form" class="relative group">
-                <div class="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-2xl blur opacity-20 group-focus-within:opacity-50 transition duration-1000"></div>
-                <div class="relative flex items-center bg-slate-900 rounded-2xl border border-white/10 p-2">
-                    <input type="text" id="msg-input" placeholder="Solicite suporte..." 
-                        class="flex-1 bg-transparent border-none text-white text-sm px-4 focus:outline-none placeholder:text-slate-600">
-                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white p-4 rounded-xl transition-all shadow-lg shadow-indigo-600/20">
-                        <i data-lucide="send" class="w-5 h-5"></i>
-                    </button>
-                </div>
-            </form>
-            <p class="text-center text-[9px] text-slate-600 mt-6 font-bold uppercase tracking-[0.3em]">Criptografia Nível Bancário</p>
-        </div>
+        <form onsubmit="realizarLogin(event)" class="space-y-4">
+            <input type="email" id="email" placeholder="E-MAIL INSTITUCIONAL" required
+                class="w-full bg-black/40 border border-white/10 p-5 rounded-2xl text-white outline-none focus:border-indigo-500 transition-all">
+            <input type="password" id="senha" placeholder="CHAVE DE ACESSO" required
+                class="w-full bg-black/40 border border-white/10 p-5 rounded-2xl text-white outline-none focus:border-indigo-500 transition-all">
+            <button type="submit" class="w-full bg-indigo-600 py-5 rounded-2xl text-white font-black hover:bg-indigo-500 transition-all">
+                ENTRAR NO CAC
+            </button>
+        </form>
+        <p class="text-center mt-8 text-[9px] text-slate-700 font-bold uppercase tracking-widest">Acesso Monitorado pelo Comando</p>
     </div>
 
     <script>
-        lucide.createIcons();
-        const socket = io();
-        const chatForm = document.getElementById('chat-form');
-        const input = document.getElementById('msg-input');
-        const box = document.getElementById('chat-box');
-
-        socket.emit('start_chat');
-
-        function addMsg(text, type) {
-            const div = document.createElement('div');
-            div.className = `msg-bubble ${type === 'out' ? 'msg-client' : 'msg-system'} animate-in fade-in slide-in-from-bottom-2`;
-            
-            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            div.innerHTML = `${text}<span class="block text-[9px] mt-2 font-bold ${type === 'out' ? 'text-indigo-200' : 'opacity-50'} uppercase tracking-widest text-${type === 'out' ? 'right' : 'left'}">${time}</span>`;
-            
-            box.appendChild(div);
-            box.scrollTo({ top: box.scrollHeight, behavior: 'smooth' });
-        }
-
-        chatForm.addEventListener('submit', (e) => {
+        function realizarLogin(e) {
             e.preventDefault();
-            if(input.value.trim()) {
-                addMsg(input.value, 'out');
-                socket.emit('client_message', { text: input.value });
-                input.value = '';
-            }
-        });
-
-        socket.on('client_receive_msg', (data) => addMsg(data.text, 'in'));
+            // Lógica: Em um sistema real, validaria com o servidor.
+            // Aqui, redirecionamos para o painel administrativo.
+            localStorage.setItem('user_email', document.getElementById('email').value);
+            window.location.href = '/admin.html';
+        }
     </script>
 </body>
 </html>
