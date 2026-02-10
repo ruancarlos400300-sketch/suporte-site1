@@ -3,115 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Suporte EB | Orbitron</title>
+    <title>EB Suporte</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;800&display=swap" rel="stylesheet">
     <style>
-    <style>
-    :root { --primary: #6366f1; --bg: #020617; }
-    body { 
-        font-family: 'Plus Jakarta Sans', sans-serif; 
-        background: var(--bg); 
-        color: white; 
-        margin: 0; padding: 0; 
-        overflow-x: hidden;
-    }
-    
-    /* CONFIGURAÇÃO PARA PC */
-    .chat-wrapper { max-width: 500px; margin: 2rem auto; height: 90vh; }
-
-    /* AJUSTE AUTOMÁTICO PARA MOBILE (TELEMÓVEL) */
-    @media (max-width: 768px) {
-        .chat-wrapper { max-width: 100%; margin: 0; height: 100vh; border-radius: 0; }
-        h1 { font-size: 1.5rem !important; padding: 0 20px; }
-        .p-10 { padding: 1.5rem !important; }
-        input, button { font-size: 0.9rem !important; }
-    }
-</style>
-
+        body { background: #020617; font-family: sans-serif; overflow: hidden; }
+        .slide-up { transform: translateY(-100vh); transition: 0.7s ease-in-out; }
+        @media (max-width: 600px) { h1 { font-size: 1.5rem !important; } }
+    </style>
 </head>
 <body>
-
-    <div id="step-1" class="h-screen w-full flex flex-col items-center justify-center bg-slate-950 z-50 absolute transition-all duration-700">
-        <h1 class="text-white text-4xl font-black tracking-tighter text-center px-10 mb-10">VOCÊ PRECISA DE SUPORTE NO NOSSO EB?</h1>
-        <button onclick="proximoPasso()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-16 py-6 rounded-full font-black text-xl shadow-2xl shadow-indigo-600/20 transition-all active:scale-95">COMECAR</button>
+    <div id="step-1" class="h-screen w-full flex flex-col items-center justify-center bg-slate-950 absolute z-50">
+        <h1 class="text-white text-3xl font-black mb-10 text-center px-4">VOCÊ PRECISA DE SUPORTE NO NOSSO EB?</h1>
+        <button onclick="iniciar()" class="bg-indigo-600 text-white px-12 py-5 rounded-full font-bold text-lg mb-6">COMECAR</button>
+        <a href="/login.html" class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Entrar como CAC...</a>
     </div>
 
     <div id="step-2" class="h-screen w-full bg-slate-900 flex flex-col items-center justify-center p-6">
-        <div id="formulario" class="w-full max-w-md space-y-4">
-            <h2 class="text-indigo-400 font-black text-center mb-8 uppercase tracking-widest">Triagem de Segurança</h2>
-            <input id="nick" type="text" placeholder="NICK DO DISCORD" class="w-full bg-black/40 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-indigo-500">
-            <input id="roblox" type="text" placeholder="NICK DO ROBLOX" class="w-full bg-black/40 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-indigo-500">
-            <textarea id="problema" placeholder="QUAL O SEU PROBLEMA?" class="w-full bg-black/40 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-indigo-500 h-32"></textarea>
-            <button onclick="conectarChat()" class="w-full bg-indigo-600 py-5 rounded-2xl text-white font-black">ABRIR CHAMADO AGORA</button>
+        <div id="form" class="w-full max-w-md space-y-4">
+            <input id="n" placeholder="NICK DISCORD" class="w-full p-4 bg-black/40 text-white rounded-xl outline-none border border-white/5">
+            <textarea id="p" placeholder="QUAL O PROBLEMA?" class="w-full p-4 bg-black/40 text-white rounded-xl outline-none border border-white/5 h-32"></textarea>
+            <button onclick="abrir()" class="w-full bg-indigo-600 py-4 rounded-xl text-white font-bold">ABRIR CHAT</button>
         </div>
-
-        <div id="chat-interface" class="hidden w-full max-w-2xl h-[80vh] bg-black/20 rounded-[2rem] flex flex-col p-6">
-            <div id="chat-msgs" class="flex-1 overflow-y-auto space-y-4 p-4"></div>
-            <div class="mt-4 flex gap-2">
-                <input id="msg-input" type="text" placeholder="Digite sua dúvida..." class="flex-1 bg-white/5 border border-white/5 p-4 rounded-xl text-white">
-                <button onclick="enviarMensagem()" class="bg-indigo-600 px-6 rounded-xl text-white font-bold">ENVIAR</button>
-            </div>
-        </div>
-
-        <div id="modal-avaliacao" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-6">
-            <div class="bg-slate-800 p-10 rounded-[2rem] text-center max-w-sm">
-                <h3 class="text-white font-black text-xl mb-4">AVALIAÇÃO</h3>
-                <p class="text-slate-400 text-sm mb-6">O atendimento foi concluído. Como você avalia o staff?</p>
-                <div class="flex justify-center gap-2 mb-8">
-                    <button onclick="avaliar(1)" class="w-10 h-10 bg-white/5 rounded-lg hover:bg-yellow-500 transition-all">1★</button>
-                    <button onclick="avaliar(2)" class="w-10 h-10 bg-white/5 rounded-lg hover:bg-yellow-500 transition-all">2★</button>
-                    <button onclick="avaliar(3)" class="w-10 h-10 bg-white/5 rounded-lg hover:bg-yellow-500 transition-all">3★</button>
-                    <button onclick="avaliar(4)" class="w-10 h-10 bg-white/5 rounded-lg hover:bg-yellow-500 transition-all">4★</button>
-                    <button onclick="avaliar(5)" class="w-10 h-10 bg-white/5 rounded-lg hover:bg-yellow-500 transition-all">5★</button>
-                </div>
+        <div id="chat" class="hidden w-full max-w-2xl h-[80vh] bg-black/20 rounded-3xl p-4 flex flex-col">
+            <div id="ms" class="flex-1 overflow-y-auto p-2 space-y-4"></div>
+            <div class="flex gap-2 mt-4">
+                <input id="in" class="flex-1 p-4 bg-white/5 text-white rounded-xl outline-none">
+                <button onclick="send()" class="bg-indigo-600 px-6 rounded-xl text-white">ENVIAR</button>
             </div>
         </div>
     </div>
 
     <script>
         const socket = io();
-        let ticketId = null;
-
-        function proximoPasso() {
-            document.getElementById('step-1').style.transform = 'translateY(-100vh)';
+        function iniciar() { document.getElementById('step-1').classList.add('slide-up'); }
+        function abrir() {
+            socket.emit('solicitar_suporte', { nick: document.getElementById('n').value, problema: document.getElementById('p').value });
+            document.getElementById('form').style.display = 'none';
+            document.getElementById('chat').classList.remove('hidden');
         }
-
-        function conectarChat() {
-            const dados = {
-                nick: document.getElementById('nick').value,
-                roblox: document.getElementById('roblox').value,
-                problema: document.getElementById('problema').value
-            };
-            if(!dados.nick || !dados.problema) return alert("Preencha os dados!");
-            
-            socket.emit('solicitar_suporte', dados);
-            document.getElementById('formulario').classList.add('hidden');
-            document.getElementById('chat-interface').classList.remove('hidden');
+        function send() {
+            const i = document.getElementById('in');
+            socket.emit('enviar_mensagem', { texto: i.value, remetente: 'PLAYER' });
+            i.value = '';
         }
-
-        function enviarMensagem() {
-            const val = document.getElementById('msg-input').value;
-            if(!val) return;
-            socket.emit('enviar_mensagem', { ticketId: socket.id, texto: val, remetente: 'PLAYER' });
-            document.getElementById('msg-input').value = '';
-        }
-
-        socket.on('receber_mensagem', (data) => {
-            const box = document.getElementById('chat-msgs');
-            box.innerHTML += `<div class="p-4 rounded-2xl ${data.remetente === 'PLAYER' ? 'bg-indigo-600 ml-auto' : 'bg-white/5'} max-w-[80%] text-sm text-white">${data.texto}</div>`;
-            box.scrollTop = box.scrollHeight;
+        socket.on('receber_mensagem', (d) => {
+            const b = document.getElementById('ms');
+            b.innerHTML += `<div class="p-3 rounded-xl ${d.remetente=='PLAYER'?'bg-indigo-600 ml-auto':'bg-white/10'} max-w-[80%] text-white text-sm">${d.texto}</div>`;
+            b.scrollTop = b.scrollHeight;
         });
-
-        socket.on('solicitar_avaliacao', () => {
-            document.getElementById('modal-avaliacao').classList.remove('hidden');
-        });
-
-        function avaliar(estrelas) {
-            socket.emit('avaliar_atendimento', { ticketId: socket.id, estrelas });
-            location.reload();
-        }
+        socket.on('solicitar_avaliacao', () => { /* Abriria o modal de estrelas aqui */ alert("Avalie o atendimento (1-5)"); socket.emit('avaliar_atendimento', {estrelas: 5}); });
+        socket.on('atendimento_encerrado', () => { location.reload(); });
     </script>
 </body>
 </html>
