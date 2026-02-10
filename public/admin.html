@@ -2,37 +2,65 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Painel Staff | Orbitron</title>
+    <title>PAINEL CAC | OPERACIONAL</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
     <script src="/firebase-config.js"></script>
     <style>
-        body { background:#020617; color:white; font-family:sans-serif; display:flex; height:100vh; margin:0; }
-        aside { width:260px; background:#0f172a; border-right:1px solid #1e293b; padding:20px; }
-        main { flex:1; padding:30px; display:flex; flex-direction:column; }
-        .ticket { background:#1e293b; padding:15px; border-radius:10px; margin-bottom:10px; cursor:pointer; border-left:4px solid #5865F2; }
-        #chat { flex:1; background:rgba(255,255,255,0.05); border-radius:15px; padding:20px; margin-bottom:20px; }
+        body { background: #020617; color: white; font-family: sans-serif; display: flex; height: 100vh; margin: 0; }
+        aside { width: 280px; background: #0f172a; border-right: 1px solid #1e293b; display: flex; flex-direction: column; }
+        .staff-info { padding: 20px; border-bottom: 1px solid #1e293b; background: #111827; }
+        .score { color: #10b981; font-weight: 900; font-size: 14px; }
+        #tickets-list { flex: 1; padding: 15px; overflow-y: auto; }
+        .ticket { background: #1e293b; padding: 15px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; border-left: 4px solid #5865F2; }
+        main { flex: 1; display: flex; flex-direction: column; padding: 25px; }
+        #chat-window { flex: 1; background: rgba(0,0,0,0.3); border-radius: 20px; padding: 20px; margin-bottom: 20px; overflow-y: auto; }
+        input#reply { width: 100%; padding: 20px; border-radius: 12px; border: none; background: #0f172a; color: white; }
     </style>
 </head>
 <body>
     <aside>
-        <h3 style="color:#5865F2; font-size:12px; margin-bottom:20px;">CHAMADOS ATIVOS</h3>
-        <div id="lista"></div>
+        <div class="staff-info">
+            <p id="staff-name">Carregando...</p>
+            <p class="score">PTS: <span id="staff-pts">0</span></p>
+        </div>
+        <div id="tickets-list"></div>
     </aside>
     <main>
-        <h2 id="nome">Aguardando Seleção...</h2>
-        <div id="chat"></div>
-        <input type="text" placeholder="Responder..." style="width:100%; padding:15px; border-radius:10px; border:none; background:#0f172a; color:white;">
+        <h3 id="chat-target">Selecione um chamado</h3>
+        <div id="chat-window"></div>
+        <input type="text" id="reply" placeholder="Enviar resposta segura...">
     </main>
+
     <script>
-        db.ref('tickets').on('child_added', (snap) => {
+        let currentTicket = null;
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                db.ref('usuarios/' + user.uid).on('value', snap => {
+                    const data = snap.val();
+                    document.getElementById('staff-name').innerText = data.nome;
+                    document.getElementById('staff-pts').innerText = data.pontos;
+                });
+            } else { window.location.href = '/login.html'; }
+        });
+
+        db.ref('tickets').on('child_added', snap => {
             const t = snap.val();
+            const id = snap.key;
             const div = document.createElement('div');
             div.className = 'ticket';
             div.innerHTML = `<strong>${t.nick}</strong><br><small>Aguardando...</small>`;
-            div.onclick = () => document.getElementById('nome').innerText = "Atendendo: " + t.nick;
-            document.getElementById('lista').appendChild(div);
+            div.onclick = () => selectTicket(id, t.nick);
+            document.getElementById('tickets-list').appendChild(div);
         });
+
+        function selectTicket(id, nick) {
+            currentTicket = id;
+            document.getElementById('chat-target').innerText = "ATENDENDO: " + nick;
+            // Lógica de carregar mensagens aqui...
+        }
     </script>
 </body>
 </html>
