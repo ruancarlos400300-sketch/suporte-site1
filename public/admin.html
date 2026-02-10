@@ -2,119 +2,39 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Administrativo | CAC</title>
-    <script src="/socket.io/socket.io.js"></script>
+    <title>Painel CAC | Orbitron</title>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+    <script src="/firebase-config.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: #020617; color: white; display: flex; height: 100vh; overflow: hidden; }
-
-        /* SIDEBAR */
-        #sidebar {
-            width: 300px;
-            background: #0f172a;
-            border-right: 1px solid rgba(255,255,255,0.05);
-            display: flex;
-            flex-direction: column;
-            transition: 0.4s;
-        }
-
-        .sidebar-locked { opacity: 0.2; pointer-events: none; filter: grayscale(1); }
-
-        .header-side { padding: 25px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .header-side h1 { font-size: 12px; color: #5865F2; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; }
-
-        #lista-tickets { flex: 1; overflow-y: auto; padding: 15px; }
-        .ticket-item { background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; border: 1px solid transparent; }
-        .ticket-item:hover { border-color: #5865F2; }
-
-        /* AREA DE CHAT */
-        main { flex: 1; display: flex; flex-direction: column; background: rgba(0,0,0,0.2); }
-        .chat-header { padding: 20px 30px; background: #0f172a; border-bottom: 1px solid rgba(255,255,255,0.05); font-weight: 800; font-size: 14px; }
-        #chat-window { flex: 1; overflow-y: auto; padding: 30px; display: flex; flex-direction: column; gap: 15px; }
-        
-        .msg { padding: 12px 18px; border-radius: 15px; max-width: 70%; font-size: 14px; }
-        .msg-staff { background: #5865F2; align-self: flex-end; }
-        .msg-player { background: #1e293b; align-self: flex-start; }
-
-        .chat-input-area { padding: 20px; background: #0f172a; }
-        input { width: 100%; background: #020617; border: 1px solid #1e293b; padding: 18px; border-radius: 12px; color: white; outline: none; }
+        body { background:#020617; color:white; display:flex; height:100vh; font-family:sans-serif; margin:0; }
+        aside { width:280px; background:#0f172a; border-right:1px solid #1e293b; padding:20px; overflow-y:auto; }
+        main { flex:1; display:flex; flex-direction:column; padding:20px; background:rgba(0,0,0,0.1); }
+        .ticket-card { background:#1e293b; padding:15px; border-radius:12px; margin-bottom:12px; cursor:pointer; border-left:4px solid #5865F2; }
+        #chat { flex:1; background:#020617; border-radius:15px; padding:20px; margin-bottom:15px; overflow-y:auto; }
+        input { width:100%; padding:18px; border-radius:12px; border:none; background:#0f172a; color:white; outline:none; }
     </style>
 </head>
 <body>
-    <aside id="sidebar">
-        <div class="header-side"><h1>FILA DE ESPERA</h1></div>
-        <div id="lista-tickets"></div>
+    <aside>
+        <h3 style="color:#5865F2; font-size:12px; margin-bottom:20px; letter-spacing:1px;">FILA DE ESPERA</h3>
+        <div id="tickets"></div>
     </aside>
-
     <main>
-        <div class="chat-header" id="nome-atendimento">AGUARDANDO SELEÇÃO...</div>
-        <div id="chat-window"></div>
-        <div class="chat-input-area">
-            <input type="text" id="staff-msg" placeholder="Comandos: /concluir ou /off">
-        </div>
+        <h2 id="view-name">Selecione um Ticket</h2>
+        <div id="chat"></div>
+        <input type="text" id="msg" placeholder="Pressione Enter para responder...">
     </main>
-
     <script>
-        const socket = io();
-        let atendimentoAtivo = false;
-        let idTicket = null;
-        const meuEmail = localStorage.getItem('user_email');
-
-        socket.on('novo_ticket_painel', (t) => {
-            const container = document.getElementById('lista-tickets');
-            if(!document.getElementById(t.id)) {
-                const div = document.createElement('div');
-                div.id = t.id;
-                div.className = 'ticket-item';
-                div.innerHTML = `<p style="font-size: 12px; font-weight: 800;">${t.nick}</p><p style="font-size: 10px; color:#475569;">${t.problema.substring(0,20)}...</p>`;
-                div.onclick = () => iniciarAtendimento(t);
-                container.appendChild(div);
-            }
+        db.ref('tickets').on('child_added', (snap) => {
+            const t = snap.val();
+            const id = snap.key;
+            const div = document.createElement('div');
+            div.className = 'ticket-card';
+            div.innerHTML = `<strong>${t.nick}</strong><br><small>${t.status}</small>`;
+            div.onclick = () => alert("Conectando ao chat de " + t.nick);
+            document.getElementById('tickets').appendChild(div);
         });
-
-        function iniciarAtendimento(t) {
-            if(atendimentoAtivo) return alert("ERRO: Finalize o atendimento atual primeiro!");
-            atendimentoAtivo = true; idTicket = t.id;
-            document.getElementById('sidebar').classList.add('sidebar-locked');
-            document.getElementById('nome-atendimento').innerText = `ATENDENDO: ${t.nick}`;
-            socket.emit('atender_player', { ticketId: t.id, staffEmail: meuEmail });
-        }
-
-        document.getElementById('staff-msg').addEventListener('keypress', (e) => {
-            if(e.key === 'Enter' && idTicket) {
-                socket.emit('enviar_mensagem', { ticketId: idTicket, texto: e.target.value, remetente: 'STAFF' });
-                e.target.value = '';
-            }
-        });
-
-        socket.on('receber_mensagem', (d) => {
-            const win = document.getElementById('chat-window');
-            const tipo = d.remetente === 'STAFF' ? 'msg-staff' : 'msg-player';
-            win.innerHTML += `<div class="msg ${tipo}"><b>${d.remetente}:</b><br>${d.texto}</div>`;
-            win.scrollTop = win.scrollHeight;
-        });
-
-        socket.on('atendimento_encerrado', () => {
-            atendimentoAtivo = false; idTicket = null;
-            document.getElementById('sidebar').classList.remove('sidebar-locked');
-            document.getElementById('chat-window').innerHTML = "";
-            document.getElementById('nome-atendimento').innerText = "AGUARDANDO SELEÇÃO...";
-            alert("Chamado encerrado. Painel desbloqueado.");
-        });
-        // Adicione este trecho no script do seu admin.html
-db.ref('chamados').on('child_added', (snapshot) => {
-    const chamado = snapshot.val();
-    const id = snapshot.key;
-    
-    // Aqui o código cria o botão do canal automaticamente na barra lateral
-    const lista = document.getElementById('lista-canais');
-    const item = document.createElement('div');
-    item.innerHTML = `<div onclick="abrirChat('${id}')" class="ticket"># ${chamado.nick}</div>`;
-    lista.appendChild(item);
-});
-
     </script>
-
 </body>
 </html>
