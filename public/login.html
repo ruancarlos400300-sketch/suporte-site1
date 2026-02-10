@@ -2,31 +2,48 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Autenticação CAC</title>
+    <title>SISTEMA EB | AUTENTICAÇÃO</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <script src="/firebase-config.js"></script>
     <style>
-        body { background:#020617; color:white; display:flex; align-items:center; justify-content:center; height:100vh; font-family:sans-serif; }
-        .box { background:#0f172a; padding:40px; border-radius:20px; width:350px; text-align:center; border:1px solid #1e293b; }
-        input { width:100%; padding:15px; margin:10px 0; border-radius:10px; border:1px solid #334155; background:#020617; color:white; }
-        button { width:100%; padding:15px; background:#5865F2; color:white; border:none; border-radius:10px; font-weight:900; cursor:pointer; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #020617; color: white; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .login-card { background: #0f172a; padding: 40px; border-radius: 20px; width: 100%; max-width: 350px; border: 1px solid #1e293b; text-align: center; }
+        h2 { color: #5865F2; font-size: 18px; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 2px; }
+        input { width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #334155; background: #020617; color: white; outline: none; }
+        input:focus { border-color: #5865F2; }
+        button { width: 100%; padding: 15px; background: #5865F2; color: white; border: none; border-radius: 10px; font-weight: 900; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #4752c4; }
     </style>
 </head>
 <body>
-    <div class="box">
-        <h2 style="color:#5865F2; margin-bottom:20px;">ACESSO STAFF</h2>
-        <input type="email" id="email" placeholder="E-mail">
-        <input type="password" id="pass" placeholder="Senha">
-        <button onclick="logar()">ENTRAR</button>
+    <div class="login-card">
+        <h2>ACESSO RESTRITO</h2>
+        <input type="email" id="email" placeholder="E-MAIL MILITAR">
+        <input type="password" id="password" placeholder="SENHA">
+        <button onclick="handleLogin()">ENTRAR NO SISTEMA</button>
     </div>
+
     <script>
-        function logar() {
-            const e = document.getElementById('email').value;
-            const s = document.getElementById('pass').value;
-            auth.signInWithEmailAndPassword(e, s)
-            .then(() => window.location.href = '/admin.html')
-            .catch(err => alert("Acesso Negado: " + err.message));
+        function handleLogin() {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+
+            auth.signInWithEmailAndPassword(email, pass)
+                .then((userCredential) => {
+                    const uid = userCredential.user.uid;
+                    db.ref('usuarios/' + uid).once('value').then((snap) => {
+                        const user = snap.val();
+                        if (user && user.cargo === 'DONO') {
+                            window.location.href = '/dono.html';
+                        } else {
+                            window.location.href = '/admin.html';
+                        }
+                    });
+                })
+                .catch(err => alert("Falha na Missão: " + err.message));
         }
     </script>
 </body>
