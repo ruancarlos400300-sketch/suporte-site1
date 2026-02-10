@@ -2,61 +2,99 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>PAINEL CAC | OPERAÇÕES</title>
+    <title>ADMIN | ORBITRON EB</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <script src="/firebase-config.js"></script>
     <style>
-        body { background: #020617; color: white; font-family: sans-serif; display: flex; height: 100vh; margin: 0; }
-        aside { width: 280px; background: #0f172a; border-right: 1px solid #1e293b; display: flex; flex-direction: column; }
-        .header-perfil { padding: 25px; border-bottom: 1px solid #1e293b; background: #111827; }
-        .nome-militar { font-weight: 900; color: #5865F2; text-transform: uppercase; margin-bottom: 5px; }
-        .pts-militar { color: #10b981; font-weight: bold; font-size: 14px; }
-        main { flex: 1; padding: 30px; display: flex; flex-direction: column; }
-        #chat-area { flex: 1; background: rgba(0,0,0,0.3); border-radius: 20px; padding: 20px; border: 1px solid #1e293b; }
+        body { background:#020617; color:white; font-family:sans-serif; display:flex; height:100vh; margin:0; }
+        aside { width:300px; background:#0f172a; border-right:1px solid #1e293b; padding:20px; }
+        main { flex:1; padding:20px; display:flex; flex-direction:column; }
+        .perfil { background:#1e293b; padding:15px; border-radius:10px; margin-bottom:20px; }
+        #chat { flex:1; background:rgba(255,255,255,0.05); border-radius:10px; padding:15px; overflow-y:auto; margin-bottom:15px; }
+        .ticket-item { background:#1e293b; padding:10px; margin-bottom:5px; border-radius:5px; cursor:pointer; }
+        input { width:100%; padding:15px; background:#0f172a; border:1px solid #334155; color:white; border-radius:10px; }
+        .msg { margin-bottom:10px; padding:8px; border-radius:5px; }
+        .msg-staff { background:#5865F2; text-align:right; }
+        .msg-player { background:#334155; text-align:left; }
     </style>
 </head>
 <body>
     <aside>
-        <div class="header-perfil">
-            <p class="nome-militar" id="staff-name">CARREGANDO...</p>
-            <p class="pts-militar">PONTOS: <span id="staff-pts">0</span></p>
+        <div class="perfil">
+            <h4 id="nome-militar">Carregando...</h4>
+            <p style="color:#10b981;">PTS: <span id="pts-militar">0</span></p>
         </div>
-        <div id="lista-chamados" style="padding: 15px;"></div>
+        <div id="lista-tickets"></div>
+        <button onclick="auth.signOut()" style="margin-top:20px; background:red; color:white; border:none; padding:10px; width:100%; border-radius:5px; cursor:pointer;">SAIR</button>
     </aside>
 
     <main>
-        <h2 style="margin-bottom: 20px;">CENTRAL DE ATENDIMENTO</h2>
-        <div id="chat-area">
-            <p style="color: #64748b;">Aguardando novo chamado...</p>
-        </div>
+        <h3 id="status-chat">Selecione um Chamado</h3>
+        <div id="chat"></div>
+        <input type="text" id="msg-input" placeholder="Digite sua resposta e aperte ENTER...">
     </main>
 
     <script>
-        // Monitoramento de login e dados do militar
+        let ticketAtivo = null;
+
+        // TRAVA DE SEGURANÇA E CARREGAMENTO DE PONTOS
         auth.onAuthStateChanged(user => {
             if (user) {
-                // Conecta aos campos 'nome' e 'pontos' que você criou
-                db.ref('usuarios/' + user.uid).on('value', (snap) => {
-                    const data = snap.val();
-                    if (data) {
-                        document.getElementById('staff-name').innerText = data.nome; // Exibirá 'cay'
-                        document.getElementById('staff-pts').innerText = data.pontos; // Exibirá '12000'
+                db.ref('usuarios/' + user.uid).on('value', snap => {
+                    const d = snap.val();
+                    if (!d || (d.cargo !== 'dono' && d.cargo !== 'admin')) {
+                        window.location.href = 'login.html';
+                    } else {
+                        document.getElementById('nome-militar').innerText = d.nome;
+                        document.getElementById('pts-militar').innerText = d.pontos;
                     }
                 });
-            } else {
-                window.location.href = 'login.html';
-            }
+            } else { window.location.href = 'login.html'; }
         });
 
-        // Ouvinte de novos chamados na nuvem
-        db.ref('tickets').on('child_added', snap => {
-            const t = snap.val();
-            const div = document.createElement('div');
-            div.style = "background:#1e293b; padding:15px; border-radius:10px; margin-bottom:10px; border-left:4px solid #5865F2; cursor:pointer;";
-            div.innerHTML = `<strong># ${t.nick}</strong>`;
-            document.getElementById('lista-chamados').appendChild(div);
+        // LISTAR TICKETS
+        db.ref('tickets').on('value', snap => {
+            const lista = document.getElementById('lista-tickets');
+            lista.innerHTML = "";
+            snap.forEach(ticket => {
+                const t = ticket.val();
+                const div = document.createElement('div');
+                div.className = 'ticket-item';
+                div.innerHTML = `<strong>${t.nick}</strong>`;
+                div.onclick = () => abrirChat(ticket.key, t.nick);
+                lista.appendChild(div);
+            });
+        });
+
+        function abrirChat(id, nick) {
+            ticketAtivo = id;
+            document.getElementById('status-chat').innerText = "Atendendo: " + nick;
+            const chatDiv = document.getElementById('chat');
+            chatDiv.innerHTML = "";
+            
+            db.ref('tickets/' + id + '/mensagens').off(); // Limpa ouvintes antigos
+            db.ref('tickets/' + id + '/mensagens').on('child_added', snap => {
+                const m = snap.val();
+                const msgDiv = document.createElement('div');
+                msgDiv.className = m.autor === 'staff' ? 'msg msg-staff' : 'msg msg-player';
+                msgDiv.innerHTML = `<b>${m.autor.toUpperCase()}:</b> ${m.texto}`;
+                chatDiv.appendChild(msgDiv);
+                chatDiv.scrollTop = chatDiv.scrollHeight;
+            });
+        }
+
+        document.getElementById('msg-input').addEventListener('keypress', e => {
+            if (e.key === 'Enter' && ticketAtivo) {
+                const txt = e.target.value;
+                db.ref('tickets/' + ticketAtivo + '/mensagens').push({
+                    autor: 'staff',
+                    texto: txt,
+                    timestamp: Date.now()
+                });
+                e.target.value = "";
+            }
         });
     </script>
 </body>
