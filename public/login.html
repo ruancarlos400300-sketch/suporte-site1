@@ -4,7 +4,16 @@
     <meta charset="UTF-8">
     <title>Login CAC | Orbitron</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;800&display=swap" rel="stylesheet">
+<style>
+    body { background: #020617; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+    .login-card { width: 400px; padding: 2rem; }
+
+    @media (max-width: 480px) {
+        .login-card { width: 90%; padding: 1.5rem; border-radius: 2rem; }
+    }
+</style>
+
 </head>
 <body class="bg-slate-950 h-screen flex items-center justify-center font-['Plus_Jakarta_Sans']">
     <div class="w-full max-w-sm p-8 bg-slate-900 rounded-[2.5rem] border border-white/5 shadow-2xl">
