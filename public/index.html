@@ -3,100 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Suporte EB | Oficial</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Suporte EB | Orbitron</title>
+    <link rel="stylesheet" href="/style.css">
     <script src="/socket.io/socket.io.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;800&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; margin: 0; overflow: hidden; }
-        .slide-up { transform: translateY(-100vh); transition: 0.8s cubic-bezier(0.65, 0, 0.35, 1); }
-        
-        /* Estilo extra para garantir visibilidade */
-        #botao-cac {
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            margin-top: 20px;
-            text-decoration: underline;
-            color: #6366f1;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-size: 12px;
-            cursor: pointer;
-        }
-    </style>
 </head>
 <body>
-
-    <div id="step-1" class="h-screen w-full flex flex-col items-center justify-center bg-slate-950 z-50 absolute transition-all duration-700">
-        <h1 class="text-white text-4xl font-black tracking-tighter mb-10 text-center px-6">
-            VOCÊ PRECISA DE SUPORTE NO NOSSO EB?
-        </h1>
-        
-        <button onclick="proximoPasso()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-20 py-6 rounded-full font-black text-xl shadow-2xl shadow-indigo-600/40 transition-all active:scale-95">
-            COMEÇAR
-        </button>
-
-        <div class="mt-8">
-            <a href="/login.html" id="botao-cac">
-                ENTRAR COMO CAC...
-            </a>
-        </div>
+    <div id="step-1" class="screen-full">
+        <h1 class="title-heavy">VOCÊ PRECISA DE SUPORTE NO NOSSO EB?</h1>
+        <button class="btn-main" onclick="proximo()">COMEÇAR</button>
+        <a href="/login.html" class="link-cac">Entrar como CAC...</a>
     </div>
 
-    <div id="step-2" class="h-screen w-full bg-slate-900 flex flex-col items-center justify-center p-4">
-        <div id="formulario" class="w-full max-w-md space-y-4">
-            <h2 class="text-indigo-400 font-black text-center mb-8 uppercase tracking-widest">Triagem Militar</h2>
-            <input id="nick" type="text" placeholder="NICK DO DISCORD" class="w-full bg-black/40 border border-white/10 p-5 rounded-2xl text-white outline-none focus:border-indigo-500">
-            <textarea id="problema" placeholder="DESCREVA O PROBLEMA" class="w-full bg-black/40 border border-white/10 p-5 rounded-2xl text-white outline-none h-32 focus:border-indigo-500"></textarea>
-            <button onclick="conectarChat()" class="w-full bg-indigo-600 py-5 rounded-2xl text-white font-black hover:bg-indigo-500 shadow-xl shadow-indigo-600/20">ABRIR CHAMADO</button>
+    <div id="step-2" class="screen-full" style="display:none; background:#0f172a;">
+        <div id="form-triagem" class="chat-container" style="height:auto; padding:2rem; gap:1rem;">
+            <h2 style="margin-bottom:1rem; color:#818cf8;">TRIAGEM MILITAR</h2>
+            <input type="text" id="nick" placeholder="NICK DO DISCORD">
+            <textarea id="prob" placeholder="DESCREVA SEU PROBLEMA" style="height:120px;"></textarea>
+            <button class="btn-main" onclick="conectar()">ABRIR CHAMADO</button>
         </div>
 
-        <div id="chat-interface" class="hidden w-full max-w-2xl h-[85vh] bg-black/40 border border-white/5 rounded-[2.5rem] flex flex-col p-6 shadow-2xl">
-            <div id="chat-msgs" class="flex-1 overflow-y-auto space-y-4 p-2"></div>
-            <div class="mt-4 flex gap-2 bg-white/5 p-2 rounded-2xl">
-                <input id="msg-input" type="text" placeholder="Digite sua dúvida..." class="flex-1 bg-transparent p-4 rounded-xl text-white outline-none">
-                <button onclick="enviarMensagem()" class="bg-indigo-600 px-8 rounded-xl text-white font-black hover:bg-indigo-500">ENVIAR</button>
+        <div id="chat-box" class="chat-container" style="display:none;">
+            <div id="msgs" class="chat-messages"></div>
+            <div style="padding:1rem; display:flex; gap:0.5rem; background:rgba(0,0,0,0.2);">
+                <input type="text" id="input-msg" placeholder="Sua dúvida...">
+                <button class="btn-main" style="padding:1rem 2rem;" onclick="enviar()">ENVIAR</button>
             </div>
         </div>
     </div>
 
     <script>
         const socket = io();
-
-        function proximoPasso() {
-            document.getElementById('step-1').classList.add('slide-up');
-        }
-
-        function conectarChat() {
+        function proximo() { document.getElementById('step-1').style.display='none'; document.getElementById('step-2').style.display='flex'; }
+        function conectar() {
             const nick = document.getElementById('nick').value;
-            const prob = document.getElementById('problema').value;
-            if(!nick || !prob) return alert("Preencha os campos de triagem!");
-
-            socket.emit('solicitar_suporte', { nick, problema: prob });
-            document.getElementById('formulario').classList.add('hidden');
-            document.getElementById('chat-interface').classList.remove('hidden');
+            if(!nick) return alert("Insira seu nick!");
+            socket.emit('solicitar_suporte', { nick, problema: document.getElementById('prob').value });
+            document.getElementById('form-triagem').style.display='none';
+            document.getElementById('chat-box').style.display='flex';
         }
-
-        function enviarMensagem() {
-            const input = document.getElementById('msg-input');
-            if(!input.value.trim()) return;
-            socket.emit('enviar_mensagem', { texto: input.value, remetente: 'PLAYER' });
-            input.value = '';
+        function enviar() {
+            const i = document.getElementById('input-msg');
+            if(!i.value) return;
+            socket.emit('enviar_mensagem', { texto: i.value, remetente: 'PLAYER' });
+            i.value = '';
         }
-
-        socket.on('receber_mensagem', (data) => {
-            const box = document.getElementById('chat-msgs');
-            const side = data.remetente === 'PLAYER' ? 'ml-auto bg-indigo-600' : 'mr-auto bg-white/10';
-            box.innerHTML += `<div class="p-4 rounded-2xl ${side} max-w-[85%] text-sm text-white shadow-md"><b>${data.remetente}:</b><br>${data.texto}</div>`;
-            box.scrollTop = box.scrollHeight;
+        socket.on('receber_mensagem', (d) => {
+            const b = document.getElementById('msgs');
+            const cl = d.remetente === 'PLAYER' ? 'message-player' : 'message-staff';
+            b.innerHTML += `<div class="message ${cl}"><b>${d.remetente}:</b><br>${d.texto}</div>`;
+            b.scrollTop = b.scrollHeight;
         });
-
-        socket.on('atendimento_encerrado', () => {
-            alert("Atendimento finalizado pelo Staff.");
-            location.reload();
-        });
+        socket.on('atendimento_encerrado', () => { alert("Sessão finalizada."); location.reload(); });
     </script>
 </body>
 </html>
