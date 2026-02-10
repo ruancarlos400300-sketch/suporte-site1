@@ -3,35 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Suporte EB | Orbitron</title>
+    <title>Suporte EB</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <script src="/firebase-config.js"></script>
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', sans-serif; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:sans-serif; }
         body { background:#020617; color:white; height:100vh; display:flex; align-items:center; justify-content:center; }
-        .menu-bar { position:fixed; top:25px; right:25px; cursor:pointer; }
+        .menu-icon { position:fixed; top:25px; right:25px; cursor:pointer; }
         .bar { width:25px; height:3px; background:white; margin:5px; border-radius:2px; }
-        .container { text-align:center; }
-        h1 { font-size:24px; font-weight:900; margin-bottom:40px; }
-        .btn-start { background:#5865F2; color:white; border:none; padding:20px 50px; border-radius:15px; font-weight:900; cursor:pointer; box-shadow:0 10px 20px rgba(0,0,0,0.3); }
+        .content { text-align:center; }
+        h1 { font-size:22px; font-weight:900; margin-bottom:30px; letter-spacing:-1px; }
+        .btn-comecar { background:#5865F2; color:white; border:none; padding:18px 50px; border-radius:50px; font-weight:900; cursor:pointer; font-size:16px; box-shadow:0 0 20px rgba(88,101,242,0.4); }
     </style>
 </head>
 <body>
-    <div class="menu-bar" onclick="window.location.href='/login.html'">
+    <div class="menu-icon" onclick="window.location.href='/login.html'">
         <div class="bar"></div><div class="bar"></div><div class="bar"></div>
     </div>
-    <div class="container">
-        <h1>VOCÊ PRECISA DE SUPORTE NO EB?</h1>
-        <button class="btn-start" onclick="gerarTicket()">COMEÇAR ATENDIMENTO</button>
+    <div class="content">
+        <h1>VOCÊ PRECISA DE SUPORTE NO NOSSO EB?</h1>
+        <button class="btn-comecar" onclick="novoChamado()">COMEÇAR</button>
     </div>
     <script>
-        function gerarTicket() {
+        function novoChamado() {
             const nick = prompt("Seu Nick no Discord:");
             if(!nick) return;
-            const ref = db.ref('tickets').push();
-            ref.set({ nick: nick, status: "ABERTO", timestamp: Date.now() })
-            .then(() => alert("Chamado enviado! O Staff já recebeu a notificação."));
+            db.ref('tickets').push({ nick: nick, status: "Aberto", time: Date.now() })
+            .then(() => alert("Chamado enviado! O Staff verá em instantes."));
         }
     </script>
 </body>
