@@ -2,90 +2,167 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>STAFF | ORBITRON</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CENTRAL DE SUPORTE | ORBITRON</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <script src="/firebase-config.js"></script>
     <style>
-        body { background:#020617; color:white; font-family:sans-serif; display:flex; height:100vh; margin:0; }
-        aside { width:280px; background:#0f172a; border-right:1px solid #1e293b; padding:20px; }
-        main { flex:1; padding:20px; display:flex; flex-direction:column; }
-        #chat { flex:1; background:rgba(0,0,0,0.2); border-radius:10px; padding:15px; overflow-y:auto; margin-bottom:10px; border:1px solid #1e293b; }
-        .ticket { background:#1e293b; padding:10px; margin-bottom:5px; border-radius:5px; cursor:pointer; }
-        input { width:100%; padding:15px; background:#0f172a; border:1px solid #334155; color:white; border-radius:5px; }
-        .msg-staff { text-align:right; color:#5865F2; margin-bottom:5px; }
-        .msg-player { text-align:left; color:#10b981; margin-bottom:5px; }
+        :root {
+            --bg-main: #313338;
+            --bg-card: #2b2d31;
+            --discord-blue: #5865F2;
+            --discord-green: #23a559;
+            --text-muted: #b5bac1;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg-main);
+            color: white;
+            font-family: 'gg sans', 'Noto Sans', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: var(--bg-card);
+            width: 100%;
+            max-width: 480px;
+            padding: 32px;
+            border-radius: 8px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        h1 { font-size: 24px; margin-bottom: 8px; font-weight: 700; }
+        p { color: var(--text-muted); margin-bottom: 24px; font-size: 16px; }
+
+        .input-group { text-align: left; margin-bottom: 20px; }
+        label { display: block; color: var(--text-muted); font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+        
+        input {
+            width: 100%;
+            padding: 10px;
+            background: #1e1f22;
+            border: none;
+            border-radius: 3px;
+            color: white;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: var(--discord-blue);
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 3px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-bottom: 16px;
+        }
+        .btn-primary:hover { background: #4752c4; }
+
+        .divider {
+            height: 1px;
+            background: #3f4147;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .footer-text { font-size: 14px; color: var(--text-muted); }
+        .link-admin {
+            color: #00a8fc;
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .link-admin:hover { text-decoration: underline; }
+
+        /* Estilo do Chat quando aberto */
+        #chat-section { display: none; }
     </style>
 </head>
 <body>
-    <aside>
-        <h2 id="nome-militar">...</h2>
-        <p>Pontos: <span id="pts-militar">0</span></p>
-        <hr style="margin:20px 0; border:0; border-top:1px solid #1e293b;">
-        <div id="lista-tickets"></div>
-        <button onclick="auth.signOut()" style="width:100%; margin-top:20px; cursor:pointer;">Sair</button>
-    </aside>
-    <main>
-        <h3 id="ticket-nome">Selecione um chamado</h3>
-        <div id="chat"></div>
-        <input type="text" id="campo-msg" placeholder="Digite e aperte Enter">
-    </main>
+
+    <div class="container" id="main-box">
+        <div id="ticket-section">
+            <h1>Precisa de ajuda?</h1>
+            <p>Abra um chamado agora com a Staff Orbitron.</p>
+            
+            <div class="input-group">
+                <label>Seu Nick no Discord</label>
+                <input type="text" id="player-nick" placeholder="Ex: cay#0001">
+            </div>
+
+            <button class="btn-primary" onclick="abrirChamado()">Abrir Ticket</button>
+
+            <div class="divider"></div>
+
+            <p class="footer-text">
+                É um militar da Staff? 
+                <span class="link-admin" onclick="window.location.href='/login'">ENTRAR COMO CAC</span>
+            </p>
+        </div>
+
+        <div id="chat-section">
+            <h1 id="atendimento-titulo">Aguardando Staff...</h1>
+            <div id="msg-container" style="height: 200px; overflow-y: auto; background: #1e1f22; padding: 10px; border-radius: 3px; text-align: left; margin-bottom: 10px;"></div>
+            <input type="text" id="msg-input" placeholder="Conversar com Staff..." onkeypress="if(event.key==='Enter') enviarMsg()">
+        </div>
+    </div>
 
     <script>
-        let ticketId = null;
+        let meuTicketId = null;
 
-        // Trava e Dados do Staff
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                db.ref('usuarios/' + user.uid).on('value', snap => {
-                    const d = snap.val();
-                    if (!d || (d.cargo !== 'dono' && d.cargo !== 'admin')) window.location.href = '/login.html';
-                    document.getElementById('nome-militar').innerText = d.nome;
-                    document.getElementById('pts-militar').innerText = d.pontos;
-                });
-            } else { window.location.href = '/login.html'; }
-        });
+        function abrirChamado() {
+            const nick = document.getElementById('player-nick').value;
+            if(!nick) return alert("Digite seu nick!");
 
-        // Lista de Chamados
-        db.ref('tickets').on('value', snap => {
-            const lista = document.getElementById('lista-tickets');
-            lista.innerHTML = "";
-            snap.forEach(t => {
-                const div = document.createElement('div');
-                div.className = 'ticket';
-                div.innerText = t.val().nick;
-                div.onclick = () => carregarChat(t.key, t.val().nick);
-                lista.appendChild(div);
-            });
-        });
+            const ref = db.ref('tickets').push();
+            meuTicketId = ref.key;
 
-        function carregarChat(id, nick) {
-            ticketId = id;
-            document.getElementById('ticket-nome').innerText = "Atendendo: " + nick;
-            const chatBox = document.getElementById('chat');
-            chatBox.innerHTML = "";
-            db.ref('tickets/' + id + '/mensagens').off();
-            db.ref('tickets/' + id + '/mensagens').on('child_added', snap => {
-                const m = snap.val();
-                const p = document.createElement('p');
-                p.className = m.autor === 'staff' ? 'msg-staff' : 'msg-player';
-                p.innerHTML = `<b>${m.autor}:</b> ${m.texto}`;
-                chatBox.appendChild(p);
-                chatBox.scrollTop = chatBox.scrollHeight;
+            ref.set({
+                nick: nick,
+                status: 'aberto',
+                timestamp: Date.now()
+            }).then(() => {
+                document.getElementById('ticket-section').style.display = 'none';
+                document.getElementById('chat-section').style.display = 'block';
+                document.getElementById('atendimento-titulo').innerText = "Atendimento: " + nick;
+                iniciarEscuta();
             });
         }
 
-        document.getElementById('campo-msg').addEventListener('keypress', e => {
-            if (e.key === 'Enter' && ticketId) {
-                db.ref('tickets/' + ticketId + '/mensagens').push({
-                    autor: 'staff',
-                    texto: e.target.value,
-                    timestamp: Date.now()
-                });
-                e.target.value = "";
-            }
-        });
+        function iniciarEscuta() {
+            db.ref('tickets/' + meuTicketId + '/mensagens').on('child_added', snap => {
+                const m = snap.val();
+                const div = document.createElement('div');
+                div.style.marginBottom = "8px";
+                div.innerHTML = `<span style="color:${m.autor === 'staff' ? '#5865F2' : '#23a559'}; font-weight:bold;">${m.autor.toUpperCase()}:</span> <span style="color:#dbdee1;">${m.texto}</span>`;
+                const container = document.getElementById('msg-container');
+                container.appendChild(div);
+                container.scrollTop = container.scrollHeight;
+            });
+        }
+
+        function enviarMsg() {
+            const inp = document.getElementById('msg-input');
+            if(!inp.value || !meuTicketId) return;
+
+            db.ref('tickets/' + meuTicketId + '/mensagens').push({
+                autor: 'player',
+                texto: inp.value,
+                timestamp: Date.now()
+            });
+            inp.value = "";
+        }
     </script>
 </body>
 </html>
