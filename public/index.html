@@ -8,12 +8,28 @@
     <script src="/socket.io/socket.io.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; overflow: hidden; }
-        .slide-up { animation: slideUp 0.6s cubic-bezier(0.65, 0, 0.35, 1) forwards; }
-        @keyframes slideUp { from { transform: translateY(0); } to { transform: translateY(-100vh); } }
-        .form-enter { animation: formEnter 0.8s 0.3s forwards opacity; opacity: 0; }
-        @keyframes formEnter { to { opacity: 1; } }
-    </style>
+    <style>
+    :root { --primary: #6366f1; --bg: #020617; }
+    body { 
+        font-family: 'Plus Jakarta Sans', sans-serif; 
+        background: var(--bg); 
+        color: white; 
+        margin: 0; padding: 0; 
+        overflow-x: hidden;
+    }
+    
+    /* CONFIGURAÇÃO PARA PC */
+    .chat-wrapper { max-width: 500px; margin: 2rem auto; height: 90vh; }
+
+    /* AJUSTE AUTOMÁTICO PARA MOBILE (TELEMÓVEL) */
+    @media (max-width: 768px) {
+        .chat-wrapper { max-width: 100%; margin: 0; height: 100vh; border-radius: 0; }
+        h1 { font-size: 1.5rem !important; padding: 0 20px; }
+        .p-10 { padding: 1.5rem !important; }
+        input, button { font-size: 0.9rem !important; }
+    }
+</style>
+
 </head>
 <body>
 
