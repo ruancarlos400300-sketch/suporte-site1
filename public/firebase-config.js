@@ -1,6 +1,6 @@
 // Substitua pelos dados que o Firebase te deu em "Configurações do Projeto"
 const firebaseConfig = {
-    apiKey: "SUA_API_KEY",
+    apiKey: "BKNXZNBNWR3HItdLx5s5_sHO94qXlGzKws5olMNJvrycI7bVUTFg1NsnCb45GwgkpkRSbQc3DVdueBAvEwys_tk",
     authDomain: "SEU_PROJETO.firebaseapp.com",
     databaseURL: "https://orbitron-eb.firebaseio.com",
     projectId: "orbitron-eb",
