@@ -144,12 +144,62 @@
     </div>
 
     <script>
-        // Inicializa os ícones Lucide
-        lucide.createIcons();
+    // Inicializa os ícones
+    lucide.createIcons();
 
-        // Autoscroll para o final do chat
-        const chatBox = document.getElementById('chat-box');
-        chatBox.scrollTop = chatBox.scrollHeight;
-    </script>
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = chatForm.querySelector('input');
+    const chatBox = document.getElementById('chat-box');
+    const closeBtn = document.querySelector('[data-lucide="x-circle"]').parentElement;
+
+    // 1. Função para Adicionar Mensagem na Tela de forma Elegante
+    function appendMessage(text, type = 'out') {
+        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const msgDiv = document.createElement('div');
+        
+        // Estilização dinâmica baseada em quem envia
+        if (type === 'out') {
+            msgDiv.className = 'flex flex-col items-end animate-message';
+            msgDiv.innerHTML = `
+                <div class="message-gradient-out p-4 rounded-[1.5rem] rounded-tr-none max-w-[80%] shadow-lg">
+                    <p class="text-white text-sm leading-relaxed">${text}</p>
+                    <span class="text-[10px] text-indigo-200 mt-2 block font-medium uppercase tracking-tighter text-right">${time} · Você</span>
+                </div>
+            `;
+        }
+
+        chatBox.appendChild(msgDiv);
+        
+        // Scroll suave para a última mensagem
+        chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
+    }
+
+    // 2. Lógica de Envio ao clicar no botão ou dar Enter
+    chatForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const message = chatInput.value.trim();
+
+        if (message !== "") {
+            appendMessage(message, 'out');
+            chatInput.value = ''; // Limpa o campo
+            
+            // Aqui simularemos uma resposta automática do sistema (até o Backend estar pronto)
+            setTimeout(() => {
+                console.log("Sistema: Mensagem enviada para o servidor...");
+            }, 500);
+        }
+    });
+
+    // 3. Função do Botão "X" (Fechar Chat)
+    closeBtn.addEventListener('click', () => {
+        if(confirm("Deseja encerrar este atendimento profissional?")) {
+            document.querySelector('.glass-panel').style.opacity = '0.5';
+            document.querySelector('.glass-panel').style.pointerEvents = 'none';
+            alert("Atendimento encerrado.");
+            // No futuro, aqui ele desconectará do banco de dados
+        }
+    });
+</script>
+
 </body>
 </html>
