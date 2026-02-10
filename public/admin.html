@@ -2,38 +2,36 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Painel CAC | Orbitron</title>
+    <title>Painel Staff | Orbitron</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <script src="/firebase-config.js"></script>
     <style>
-        body { background:#020617; color:white; display:flex; height:100vh; font-family:sans-serif; margin:0; }
-        aside { width:280px; background:#0f172a; border-right:1px solid #1e293b; padding:20px; overflow-y:auto; }
-        main { flex:1; display:flex; flex-direction:column; padding:20px; background:rgba(0,0,0,0.1); }
-        .ticket-card { background:#1e293b; padding:15px; border-radius:12px; margin-bottom:12px; cursor:pointer; border-left:4px solid #5865F2; }
-        #chat { flex:1; background:#020617; border-radius:15px; padding:20px; margin-bottom:15px; overflow-y:auto; }
-        input { width:100%; padding:18px; border-radius:12px; border:none; background:#0f172a; color:white; outline:none; }
+        body { background:#020617; color:white; font-family:sans-serif; display:flex; height:100vh; margin:0; }
+        aside { width:260px; background:#0f172a; border-right:1px solid #1e293b; padding:20px; }
+        main { flex:1; padding:30px; display:flex; flex-direction:column; }
+        .ticket { background:#1e293b; padding:15px; border-radius:10px; margin-bottom:10px; cursor:pointer; border-left:4px solid #5865F2; }
+        #chat { flex:1; background:rgba(255,255,255,0.05); border-radius:15px; padding:20px; margin-bottom:20px; }
     </style>
 </head>
 <body>
     <aside>
-        <h3 style="color:#5865F2; font-size:12px; margin-bottom:20px; letter-spacing:1px;">FILA DE ESPERA</h3>
-        <div id="tickets"></div>
+        <h3 style="color:#5865F2; font-size:12px; margin-bottom:20px;">CHAMADOS ATIVOS</h3>
+        <div id="lista"></div>
     </aside>
     <main>
-        <h2 id="view-name">Selecione um Ticket</h2>
+        <h2 id="nome">Aguardando Seleção...</h2>
         <div id="chat"></div>
-        <input type="text" id="msg" placeholder="Pressione Enter para responder...">
+        <input type="text" placeholder="Responder..." style="width:100%; padding:15px; border-radius:10px; border:none; background:#0f172a; color:white;">
     </main>
     <script>
         db.ref('tickets').on('child_added', (snap) => {
             const t = snap.val();
-            const id = snap.key;
             const div = document.createElement('div');
-            div.className = 'ticket-card';
-            div.innerHTML = `<strong>${t.nick}</strong><br><small>${t.status}</small>`;
-            div.onclick = () => alert("Conectando ao chat de " + t.nick);
-            document.getElementById('tickets').appendChild(div);
+            div.className = 'ticket';
+            div.innerHTML = `<strong>${t.nick}</strong><br><small>Aguardando...</small>`;
+            div.onclick = () => document.getElementById('nome').innerText = "Atendendo: " + t.nick;
+            document.getElementById('lista').appendChild(div);
         });
     </script>
 </body>
