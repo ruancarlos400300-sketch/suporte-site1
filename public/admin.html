@@ -8,112 +8,187 @@
     <script src="/socket.io/socket.io.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-<style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background: #0f172a; margin: 0; display: flex; }
-    
-    /* SIDEBAR COMPLETA PARA PC */
-    .sidebar { width: 280px; transition: all 0.3s ease; }
-
-    /* AJUSTE PARA MOBILE */
-    @media (max-width: 768px) {
-        .sidebar { width: 70px !important; } /* Encolhe a barra lateral */
-        .sidebar span, .sidebar p, .sidebar h1 { display: none; } /* Esconde textos */
-        .sidebar .p-6, .sidebar .p-4 { padding: 10px !important; display: flex; justify-content: center; }
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #0f172a; color: #f8fafc; margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
-        main { width: calc(100% - 70px); }
-        header { padding: 0 1rem !important; }
-        #chat-content { padding: 1rem !important; }
-        #input-msg { padding-right: 100px !important; } /* Garante que os botões /off e /concluir não cubram o texto */
-    }
-</style>
+        /* SIDEBAR ESTILO DISCORD */
+        .sidebar { width: 280px; background: #1e293b; border-right: 1px solid rgba(255,255,255,0.05); flex-shrink: 0; transition: all 0.3s; }
+        .channel-item { transition: all 0.2s; border-radius: 8px; margin-bottom: 4px; padding: 10px; cursor: pointer; display: flex; items-center: center; gap: 8px; }
+        .channel-item:hover { background: rgba(255,255,255,0.05); }
+        .channel-active { background: rgba(99, 102, 241, 0.2) !important; color: #818cf8; border-left: 3px solid #6366f1; }
+        
+        /* TRAVA DE INTERFACE */
+        .locked { opacity: 0.3; pointer-events: none; filter: grayscale(1); }
 
+        /* RESPONSIVIDADE MOBILE */
+        @media (max-width: 768px) {
+            .sidebar { width: 70px; }
+            .sidebar span, .sidebar h1, .sidebar p { display: none; }
+            .sidebar .p-6, .sidebar .p-4 { padding: 15px; text-align: center; }
+            main { width: calc(100% - 70px); }
+        }
+
+        .chat-scroll::-webkit-scrollbar { width: 4px; }
+        .chat-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+    </style>
 </head>
-<body class="flex h-screen">
+<body>
 
-    <aside class="sidebar w-72 flex flex-col">
-        <div class="p-6 border-b border-white/5 flex items-center gap-3">
-            <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-black">EB</div>
-            <h1 class="font-black text-sm tracking-widest uppercase">Central CAC</h1>
+    <aside class="sidebar flex flex-col" id="sidebar">
+        <div class="p-6 border-b border-white/5">
+            <h1 class="font-black text-sm tracking-widest uppercase text-indigo-500 italic">ORBITRON CAC</h1>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-4 space-y-2">
-            <p class="text-[10px] font-bold text-slate-500 uppercase px-2 mb-4">Atendimentos Ativos</p>
+        <div class="flex-1 overflow-y-auto p-4" id="lista-canais-container">
+            <p class="text-[10px] font-bold text-slate-500 uppercase px-2 mb-4 tracking-widest">Canais de Atendimento</p>
             <div id="lista-canais">
-                <p class="text-xs text-slate-600 italic px-2">Nenhum chamado no momento...</p>
+                <p class="text-[10px] text-slate-600 px-2 italic">Aguardando chamados...</p>
             </div>
         </div>
 
-        <div class="p-4 bg-black/20 mt-auto">
+        <div class="p-4 bg-black/20 border-t border-white/5">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center font-bold" id="staff-avatar">?</div>
-                <div>
-                    <p class="text-xs font-bold" id="staff-nome">Carregando...</p>
-                    <p class="text-[10px] text-emerald-400 font-bold uppercase tracking-tighter" id="staff-rank">LEVEL --</p>
+                <div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-xs" id="staff-prefix">S</div>
+                <div class="overflow-hidden">
+                    <p class="text-[10px] font-bold truncate" id="staff-email-display">Acedendo...</p>
+                    <p class="text-[9px] text-emerald-400 font-black uppercase">Status: Online</p>
                 </div>
             </div>
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col relative">
-        <header class="h-16 border-b border-white/5 flex items-center px-8 justify-between glass-chat">
+    <main class="flex-1 flex flex-col bg-slate-900/50">
+        <header class="h-16 border-b border-white/5 flex items-center px-8 justify-between bg-slate-900/80 backdrop-blur-md">
             <div class="flex items-center gap-2">
                 <i data-lucide="hash" class="w-4 h-4 text-slate-500"></i>
-                <span class="font-bold text-sm" id="chat-atual-nome">Selecione um canal</span>
+                <span class="font-bold text-sm text-white" id="nome-chat-atual">Selecione um player</span>
             </div>
-            <div id="badge-alerta" class="hidden px-3 py-1 bg-red-500 rounded-full text-[10px] font-black animate-bounce">SOLICITOU SUPERIOR</div>
+            <div id="indicador-alerta" class="hidden px-3 py-1 bg-red-600 rounded-full text-[9px] font-black animate-pulse">ALERTA: SUPERIOR SOLICITADO</div>
         </header>
 
-        <div id="chat-content" class="flex-1 overflow-y-auto p-8 space-y-4 custom-scroll">
-            </div>
+        <div id="box-mensagens" class="flex-1 overflow-y-auto p-6 space-y-4 chat-scroll flex flex-col">
+            <div class="text-center text-slate-600 text-xs mt-20">Aguardando conexão com o canal...</div>
+        </div>
 
-        <footer class="p-6">
-            <div class="relative max-w-5xl mx-auto">
-                <input id="input-msg" type="text" placeholder="Escreva para o player..." 
-                    class="w-full bg-slate-800 border border-white/5 rounded-xl py-4 px-6 text-sm focus:outline-none focus:border-indigo-500 transition-all">
-                <div class="absolute right-3 top-2 flex gap-2">
-                    <button onclick="enviarComando('/off')" class="bg-red-500/20 hover:bg-red-500/40 text-red-400 px-3 py-2 rounded-lg text-[10px] font-black uppercase">/off</button>
-                    <button onclick="enviarComando('/concluir')" class="bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-400 px-3 py-2 rounded-lg text-[10px] font-black uppercase">/concluir</button>
-                </div>
+        <footer class="p-6 bg-slate-950/50">
+            <div class="max-w-4xl mx-auto relative group">
+                <input type="text" id="input-chat" placeholder="Escreva aqui ou use /concluir ou /off..." 
+                    class="w-full bg-slate-800 border border-white/10 rounded-2xl py-5 px-6 text-sm text-white outline-none focus:border-indigo-500 transition-all">
+                <button onclick="enviarMensagemStaff()" class="absolute right-4 top-4 bg-indigo-600 p-2 rounded-lg hover:bg-indigo-500">
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                </button>
             </div>
+            <p class="text-center text-[8px] text-slate-600 mt-4 uppercase font-bold tracking-[0.4em]">Protocolo de Atendimento EB</p>
         </footer>
     </main>
 
     <script>
         const socket = io();
-        let meuEmail = "atendente@eb.com"; // Deve vir do login
-        let ticketSelecionado = null;
+        let emAtendimento = false;
+        let ticketAtivoId = null;
+        const meuEmail = localStorage.getItem('user_email') || "atendente@eb.com";
 
+        document.getElementById('staff-email-display').innerText = meuEmail;
+        lucide.createIcons();
+
+        // RECEBER NOVOS TICKETS NA LISTA
         socket.on('novo_ticket_painel', (ticket) => {
             const lista = document.getElementById('lista-canais');
-            const canal = document.createElement('div');
-            canal.id = `canal-${ticket.id}`;
-            canal.className = `flex items-center gap-2 p-3 rounded-lg cursor-pointer hover:bg-white/5 transition-all mb-1 ${ticket.alerta ? 'alert-pulse border border-red-500/50' : ''}`;
-            canal.onclick = () => selecionarTicket(ticket.id);
-            canal.innerHTML = `<i data-lucide="hash" class="w-4 h-4 text-slate-500"></i> <span class="text-sm font-semibold">${ticket.nick}</span>`;
-            lista.appendChild(canal);
-            lucide.createIcons();
+            
+            // Remove o texto de "aguardando" se for o primeiro
+            if(lista.innerText.includes("Aguardando")) lista.innerHTML = "";
+
+            if(!document.getElementById(`canal-${ticket.id}`)) {
+                const item = document.createElement('div');
+                item.id = `canal-${ticket.id}`;
+                item.className = `channel-item ${ticket.alerta ? 'border border-red-500/50 bg-red-500/5' : ''}`;
+                item.onclick = () => assumirAtendimento(ticket.id, ticket.nick);
+                item.innerHTML = `
+                    <i data-lucide="message-square" class="w-4 h-4 text-slate-500"></i>
+                    <span class="text-xs font-semibold truncate">${ticket.nick}</span>
+                    ${ticket.alerta ? '<span class="w-2 h-2 bg-red-500 rounded-full ml-auto animate-ping"></span>' : ''}
+                `;
+                lista.appendChild(item);
+                lucide.createIcons();
+            }
         });
 
-        function selecionarTicket(id) {
-            ticketSelecionado = id;
-            document.querySelectorAll('[id^="canal-"]').forEach(el => el.classList.remove('channel-active'));
+        // FUNÇÃO PARA TRAVAR NO CHAT
+        function assumirAtendimento(id, nick) {
+            if(emAtendimento) {
+                alert("⚠️ DISCIPLINA: Você já está num atendimento! Finalize com /concluir ou /off antes de sair.");
+                return;
+            }
+
+            emAtendimento = true;
+            ticketAtivoId = id;
+
+            // Interface Travada
+            document.getElementById('lista-canais-container').classList.add('locked');
             document.getElementById(`canal-${id}`).classList.add('channel-active');
+            document.getElementById('nome-chat-atual').innerText = nick.toUpperCase();
+            document.getElementById('box-mensagens').innerHTML = `<div class="text-center text-[10px] text-indigo-400 font-bold uppercase tracking-widest py-4 border-b border-white/5 mb-4">Sessão Iniciada com ${nick}</div>`;
+
             socket.emit('atender_player', { ticketId: id, staffEmail: meuEmail });
-            document.getElementById('chat-atual-nome').innerText = id;
         }
 
-        function enviarComando(cmd) {
-            if (!ticketSelecionado) return;
-            socket.emit('enviar_mensagem', { ticketId: ticketSelecionado, texto: cmd, remetente: 'STAFF' });
+        // ENVIAR MENSAGENS E COMANDOS
+        function enviarMensagemStaff() {
+            const input = document.getElementById('input-chat');
+            const texto = input.value.trim();
+
+            if(!texto || !ticketAtivoId) return;
+
+            // Envia para o servidor processar (se for comando / ele trata lá)
+            socket.emit('enviar_mensagem', { 
+                ticketId: ticketAtivoId, 
+                texto: texto, 
+                remetente: 'STAFF' 
+            });
+
+            input.value = "";
         }
 
+        // RECEBER MENSAGENS NO CHAT
         socket.on('receber_mensagem', (data) => {
-            const content = document.getElementById('chat-content');
-            content.innerHTML += `<div class="p-3 bg-slate-800/50 rounded-lg text-sm"><b class="text-indigo-400">${data.remetente}:</b> ${data.texto}</div>`;
-            content.scrollTop = content.scrollHeight;
+            const box = document.getElementById('box-mensagens');
+            const isMe = data.remetente === 'STAFF';
+            
+            const msgHtml = `
+                <div class="flex ${isMe ? 'justify-end' : 'justify-start'}">
+                    <div class="max-w-[80%] ${isMe ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-200'} p-3 rounded-2xl text-sm shadow-sm">
+                        <p class="text-[9px] font-black uppercase mb-1 opacity-50">${data.remetente}</p>
+                        ${data.texto}
+                    </div>
+                </div>
+            `;
+            
+            box.innerHTML += msgHtml;
+            box.scrollTop = box.scrollHeight;
         });
 
-        lucide.createIcons();
+        // ESCUTAR FINALIZAÇÃO (LIBERAR TRAVA)
+        socket.on('atendimento_encerrado', () => {
+            emAtendimento = false;
+            
+            // Libera interface
+            document.getElementById('lista-canais-container').classList.remove('locked');
+            if(ticketAtivoId) {
+                const el = document.getElementById(`canal-${ticketAtivoId}`);
+                if(el) el.remove();
+            }
+            
+            ticketAtivoId = null;
+            document.getElementById('nome-chat-atual').innerText = "Selecione um player";
+            document.getElementById('box-mensagens').innerHTML = `<div class="text-center text-emerald-500 font-bold text-xs mt-20">Atendimento Concluído com Sucesso. <br> Canal Liberado para novo chamado.</div>`;
+            
+            alert("✅ Canal encerrado e pontos contabilizados.");
+        });
+
+        // Suporte a tecla Enter
+        document.getElementById('input-chat').addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') enviarMensagemStaff();
+        });
     </script>
 </body>
 </html>
