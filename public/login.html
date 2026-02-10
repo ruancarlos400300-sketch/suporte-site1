@@ -2,45 +2,31 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Login CAC | Orbitron</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;800&display=swap" rel="stylesheet">
-<style>
-    body { background: #020617; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-    .login-card { width: 400px; padding: 2rem; }
-
-    @media (max-width: 480px) {
-        .login-card { width: 90%; padding: 1.5rem; border-radius: 2rem; }
-    }
-</style>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Orbitron</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="/socket.io/socket.io.js"></script>
 </head>
-<body class="bg-slate-950 h-screen flex items-center justify-center font-['Plus_Jakarta_Sans']">
-    <div class="w-full max-w-sm p-8 bg-slate-900 rounded-[2.5rem] border border-white/5 shadow-2xl">
-        <div class="text-center mb-10">
-            <h1 class="text-indigo-500 font-black text-2xl italic">ORBITRON</h1>
-            <p class="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em]">Autenticação Militar</p>
-        </div>
-        <form onsubmit="realizarLogin(event)" class="space-y-4">
-            <input type="email" id="email" placeholder="E-MAIL INSTITUCIONAL" required
-                class="w-full bg-black/40 border border-white/10 p-5 rounded-2xl text-white outline-none focus:border-indigo-500 transition-all">
-            <input type="password" id="senha" placeholder="CHAVE DE ACESSO" required
-                class="w-full bg-black/40 border border-white/10 p-5 rounded-2xl text-white outline-none focus:border-indigo-500 transition-all">
-            <button type="submit" class="w-full bg-indigo-600 py-5 rounded-2xl text-white font-black hover:bg-indigo-500 transition-all">
-                ENTRAR NO CAC
-            </button>
-        </form>
-        <p class="text-center mt-8 text-[9px] text-slate-700 font-bold uppercase tracking-widest">Acesso Monitorado pelo Comando</p>
+<body class="screen-full">
+    <div class="chat-container" style="max-width:400px; height:auto; padding:3rem; gap:1.5rem;">
+        <h2 style="font-weight:900; letter-spacing:2px; color:#6366f1;">LOGIN CAC</h2>
+        <input type="email" id="email" placeholder="E-MAIL">
+        <input type="password" id="senha" placeholder="SENHA">
+        <button class="btn-main" onclick="entrar()">ACESSAR SISTEMA</button>
     </div>
 
     <script>
-        function realizarLogin(e) {
-            e.preventDefault();
-            // Lógica: Em um sistema real, validaria com o servidor.
-            // Aqui, redirecionamos para o painel administrativo.
-            localStorage.setItem('user_email', document.getElementById('email').value);
-            window.location.href = '/admin.html';
+        const socket = io();
+        function entrar() {
+            const email = document.getElementById('email').value;
+            const senha = document.getElementById('senha').value;
+            socket.emit('tentar_login', { email, senha });
         }
+        socket.on('login_sucesso', (d) => {
+            localStorage.setItem('user_email', d.email);
+            window.location.href = (d.cargo === 'DONO') ? '/dono.html' : '/admin.html';
+        });
+        socket.on('login_erro', (m) => alert(m));
     </script>
 </body>
 </html>
