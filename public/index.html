@@ -2,84 +2,63 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Suporte Militar | Orbitron</title>
-    
+    <title>SUPORTE | ORBITRON</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
-    
     <script src="/firebase-config.js"></script>
-
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: #020617; color: white; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        
-        /* Menu de Barrinhas brancas no canto superior */
-        .menu-admin { position: fixed; top: 25px; right: 25px; cursor: pointer; z-index: 100; padding: 10px; }
-        .bar { width: 25px; height: 3px; background: white; margin: 5px; border-radius: 2px; transition: 0.3s; }
-        .menu-admin:hover .bar { background: #5865F2; }
-
-        .container { text-align: center; padding: 20px; }
-        h1 { font-size: 26px; font-weight: 900; margin-bottom: 40px; line-height: 1.2; letter-spacing: -1px; }
-        
-        .btn-start {
-            background: #5865F2; color: white; border: none; padding: 20px 60px;
-            border-radius: 50px; font-weight: 900; font-size: 16px; cursor: pointer;
-            text-transform: uppercase; transition: 0.3s;
-            box-shadow: 0 10px 30px rgba(88, 101, 242, 0.4);
-        }
-        .btn-start:hover { transform: translateY(-3px); background: #4752c4; }
-        .btn-start:active { transform: translateY(0); }
+        body { background:#020617; color:white; font-family:sans-serif; text-align:center; padding-top:100px; }
+        .btn { background:#5865F2; color:white; padding:20px 40px; border-radius:50px; border:none; font-weight:bold; cursor:pointer; font-size:18px; }
+        #chat-player { width:350px; margin:20px auto; background:#0f172a; padding:20px; border-radius:10px; display:none; border:1px solid #1e293b; }
+        .msgs { height:200px; overflow-y:auto; text-align:left; margin-bottom:10px; }
+        input { width:100%; padding:10px; border-radius:5px; border:none; }
     </style>
 </head>
 <body>
-
-    <div class="menu-admin" onclick="window.location.href='/login.html'">
-        <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    <div id="inicial">
+        <h1>SUPORTE ORBITRON</h1>
+        <button class="btn" onclick="comecar()">COMEÇAR ATENDIMENTO</button>
     </div>
 
-    <div class="container">
-        <h1>VOCÊ PRECISA DE SUPORTE<br>NO NOSSO EB?</h1>
-        <button class="btn-start" id="btnEnviar" onclick="abrirTicket()">COMEÇAR ATENDIMENTO</button>
+    <div id="chat-player">
+        <div class="msgs" id="msgs"></div>
+        <input type="text" id="msg-input" placeholder="Diga algo...">
     </div>
 
     <script>
-        function abrirTicket() {
-            const nick = prompt("Informe seu Nick do Discord:");
+        let meuTicket = null;
+
+        function comecar() {
+            const n = prompt("Seu Nick:");
+            if(!n) return;
             
-            if (!nick) {
-                alert("Operação cancelada. O Nick é obrigatório.");
-                return;
-            }
-
-            // Desativa o botão temporariamente para evitar cliques duplos
-            const btn = document.getElementById('btnEnviar');
-            btn.disabled = true;
-            btn.innerText = "ENVIANDO...";
-
-            // Referência para a pasta 'tickets' no seu Firebase
-            const ticketsRef = db.ref('tickets');
-            const novoTicket = ticketsRef.push();
-
-            // Grava os dados na nuvem
-            novoTicket.set({
-                nick: nick,
-                status: "aberto",
-                criadoEm: Date.now(),
-                mensagem: "Aguardando início do chat..."
-            })
-            .then(() => {
-                alert("Chamado enviado com sucesso! O militar Cay ou a equipe Staff já foram notificados.");
-                btn.disabled = false;
-                btn.innerText = "COMEÇAR ATENDIMENTO";
-            })
-            .catch((error) => {
-                console.error("Erro Firebase:", error);
-                alert("Erro ao conectar com o servidor. Verifique suas regras de segurança.");
-                btn.disabled = false;
-                btn.innerText = "COMEÇAR ATENDIMENTO";
+            const ref = db.ref('tickets').push();
+            meuTicket = ref.key;
+            ref.set({ nick: n, status: 'aberto' }).then(() => {
+                document.getElementById('inicial').style.display = 'none';
+                document.getElementById('chat-player').style.display = 'block';
+                escutarMensagens();
             });
         }
+
+        function escutarMensagens() {
+            db.ref('tickets/' + meuTicket + '/mensagens').on('child_added', snap => {
+                const m = snap.val();
+                const div = document.createElement('div');
+                div.innerHTML = `<b>${m.autor}:</b> ${m.texto}`;
+                document.getElementById('msgs').appendChild(div);
+            });
+        }
+
+        document.getElementById('msg-input').addEventListener('keypress', e => {
+            if (e.key === 'Enter' && meuTicket) {
+                db.ref('tickets/' + meuTicket + '/mensagens').push({
+                    autor: 'player',
+                    texto: e.target.value
+                });
+                e.target.value = "";
+            }
+        });
     </script>
 </body>
 </html>
