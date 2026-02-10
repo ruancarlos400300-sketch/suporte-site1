@@ -1,1 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Comando Supremo | EB</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body class="bg-[#020617] text-slate-300 font-['Plus_Jakarta_Sans'] p-10">
+
+    <header class="flex justify-between items-center mb-12">
+        <div>
+            <h1 class="text-white text-3xl font-black italic tracking-tighter">PAINEL DO DONO</h1>
+            <p class="text-indigo-400 font-bold text-xs uppercase tracking-widest">Gestão de Mérito e Logística</p>
+        </div>
+        <div class="bg-indigo-600/10 border border-indigo-500/20 p-4 rounded-2xl">
+            <span class="text-[10px] font-black block">PONTOS TOTAIS DO COMANDO</span>
+            <span class="text-2xl text-white font-black">12.000,00</span>
+        </div>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <section class="bg-slate-900/50 border border-white/5 p-8 rounded-[2rem]">
+            <h2 class="text-white font-black mb-6 uppercase text-sm">Setar Novo Atendente</h2>
+            <div class="space-y-4">
+                <input id="new-email" type="email" placeholder="E-MAIL" class="w-full bg-black/40 border border-white/5 p-4 rounded-xl outline-none text-sm">
+                <select id="new-cargo" class="w-full bg-black/40 border border-white/5 p-4 rounded-xl outline-none text-sm appearance-none">
+                    <option value="ATENDENTE">ATENDENTE (MÉDITO 1.0)</option>
+                    <option value="SUPERIOR">SUPERIOR (MÉRITO 2.0)</option>
+                </select>
+                <button onclick="addStaff()" class="w-full bg-indigo-600 py-4 rounded-xl text-white font-black text-xs">CONFIRMAR SET</button>
+            </div>
+        </section>
+
+        <section class="lg:col-span-2 bg-slate-900/50 border border-white/5 p-8 rounded-[2rem]">
+            <h2 class="text-white font-black mb-6 uppercase text-sm">Efetivo e Gamificação</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="text-slate-500 border-b border-white/5">
+                            <th class="pb-4 font-black">STAFF</th>
+                            <th class="pb-4 font-black text-center">CARGO</th>
+                            <th class="pb-4 font-black text-center">PONTOS</th>
+                            <th class="pb-4 font-black text-center">LEVEL</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-staff">
+                        </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="lg:col-span-3 bg-slate-900/50 border border-white/5 p-8 rounded-[2rem]">
+            <h2 class="text-white font-black mb-6 uppercase text-sm">Logs de Atendimento (Arquivados)</h2>
+            <div class="space-y-2" id="container-logs">
+                <p class="text-slate-600 italic">Aguardando arquivamento de sessões...</p>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const socket = io();
+
+        function addStaff() {
+            const email = document.getElementById('new-email').value;
+            const cargo = document.getElementById('new-cargo').value;
+            if(email) {
+                // Envia para o server processar o set
+                alert(`Staff ${email} setado como ${cargo}`);
+            }
+        }
+
+        // Simulação de Logs recebidas do servidor
+        socket.on('atualizar_painel_admin', (data) => {
+            // Aqui o DOM é atualizado com as logs e novos pontos
+        });
+    </script>
+</body>
+</html>
 
