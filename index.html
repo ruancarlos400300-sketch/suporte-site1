@@ -1,67 +1,44 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Site de Suporte - Cliente</title>
+    <title>Suporte Pro | Atendimento em Tempo Real</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        h1 { color: #333; }
-        #chat-button { background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; display: none; }
-        #chat-button:hover { background-color: #0056b3; }
-        #chat-box { display: none; margin-top: 20px; border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; background: #fafafa; }
-        #messages { margin-bottom: 10px; }
-        #chat-input { width: 80%; padding: 5px; }
-        button.send { padding: 5px 10px; }
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>Site de Suporte</h1>
-        <p>Bem-vindo! Clique no botão abaixo para falar com nosso suporte.</p>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="glass w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[600px]">
         
-        <button id="chat-button" onclick="openChat()">💬 Falar com Suporte</button>
-        
-        <div id="chat-box">
-            <div id="messages"></div>
-            <input type="text" id="chat-input" placeholder="Digite sua mensagem..." onkeypress="sendMessage(event)">
-            <button class="send" onclick="sendMessage()">Enviar</button>
+        <div class="bg-blue-600 p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                <h1 class="text-white font-semibold">Suporte Especializado</h1>
+            </div>
+            <span class="text-blue-200 text-xs">Online agora</span>
+        </div>
+
+        <div id="chat-messages" class="flex-1 p-4 overflow-y-auto flex flex-col gap-4">
+            <div class="self-start max-w-[80%] bg-slate-700 text-slate-200 p-3 rounded-2xl rounded-tl-none text-sm">
+                Olá! Como podemos ajudar você hoje? Nossa equipe está pronta para atendê-lo.
+            </div>
+        </div>
+
+        <div class="p-4 border-t border-slate-700 bg-slate-800/50">
+            <form id="chat-form" class="flex gap-2">
+                <input type="text" placeholder="Digite sua dúvida..." 
+                    class="flex-1 bg-slate-900 text-slate-300 border border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-blue-500 transition-all">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl transition-colors font-medium">
+                    Enviar
+                </button>
+            </form>
         </div>
     </div>
 
-    <script>
-        let staffs = [];
-        let currentStaff = '';
-
-        function loadStaffs() {
-            staffs = JSON.parse(localStorage.getItem('staffs')) || [];
-            if (staffs.length > 0) {
-                document.getElementById('chat-button').style.display = 'block';
-                currentStaff = staffs[Math.floor(Math.random() * staffs.length)]; // Escolhe um staff aleatório para simular
-            }
-        }
-
-        function openChat() {
-            document.getElementById('chat-box').style.display = 'block';
-            document.getElementById('messages').innerHTML += `<p><em>Conectado ao staff: ${currentStaff}</em></p>`;
-        }
-
-        function sendMessage(event) {
-            if (event && event.key !== 'Enter') return;
-            const input = document.getElementById('chat-input');
-            const message = input.value.trim();
-            if (message) {
-                document.getElementById('messages').innerHTML += `<p><strong>Você:</strong> ${message}</p>`;
-                input.value = '';
-                // Simulação de resposta do staff
-                setTimeout(() => {
-                    document.getElementById('messages').innerHTML += `<p><strong>Staff (${currentStaff}):</strong> Obrigado! Sua mensagem foi recebida. Estamos ajudando.</p>`;
-                }, 1000);
-            }
-        }
-
-        window.onload = loadStaffs;
-    </script>
 </body>
 </html>
