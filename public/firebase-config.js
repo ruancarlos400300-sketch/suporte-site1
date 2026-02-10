@@ -1,12 +1,12 @@
 // Substitua pelos dados que o Firebase te deu em "Configurações do Projeto"
 const firebaseConfig = {
-    apiKey: "BKNXZNBNWR3HItdLx5s5_sHO94qXlGzKws5olMNJvrycI7bVUTFg1NsnCb45GwgkpkRSbQc3DVdueBAvEwys_tk",
-    authDomain: "SEU_PROJETO.firebaseapp.com",
-    databaseURL: "https://orbitron-eb.firebaseio.com",
+    apiKey: "AIzaSyD9c-XVte3VsLDSXXRPH8FvxeVcI5XIlec",
+    authDomain: "orbitron-eb.firebaseapp.com",
+    databaseURL: "https://orbitron-eb-default-rtdb.firebaseio.com",
     projectId: "orbitron-eb",
-    storageBucket: "orbitron-eb.appspot.com",
-    messagingSenderId: "ID_MENSAGEM",
-    appId: "ID_APP"
+    storageBucket: "orbitron-eb.firebasestorage.app",
+    messagingSenderId: "167183542132",
+    appId: "1:167183542132:web:9c1f789df9db75f408ee21"
 };
 
 // Inicialização Única
