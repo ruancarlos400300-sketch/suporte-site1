@@ -3,34 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Suporte EB</title>
+    <title>Suporte Militar | Orbitron</title>
+    
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+    
     <script src="/firebase-config.js"></script>
+
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; font-family:sans-serif; }
-        body { background:#020617; color:white; height:100vh; display:flex; align-items:center; justify-content:center; }
-        .menu-icon { position:fixed; top:25px; right:25px; cursor:pointer; }
-        .bar { width:25px; height:3px; background:white; margin:5px; border-radius:2px; }
-        .content { text-align:center; }
-        h1 { font-size:22px; font-weight:900; margin-bottom:30px; letter-spacing:-1px; }
-        .btn-comecar { background:#5865F2; color:white; border:none; padding:18px 50px; border-radius:50px; font-weight:900; cursor:pointer; font-size:16px; box-shadow:0 0 20px rgba(88,101,242,0.4); }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #020617; color: white; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        
+        /* Menu de Barrinhas brancas no canto superior */
+        .menu-admin { position: fixed; top: 25px; right: 25px; cursor: pointer; z-index: 100; padding: 10px; }
+        .bar { width: 25px; height: 3px; background: white; margin: 5px; border-radius: 2px; transition: 0.3s; }
+        .menu-admin:hover .bar { background: #5865F2; }
+
+        .container { text-align: center; padding: 20px; }
+        h1 { font-size: 26px; font-weight: 900; margin-bottom: 40px; line-height: 1.2; letter-spacing: -1px; }
+        
+        .btn-start {
+            background: #5865F2; color: white; border: none; padding: 20px 60px;
+            border-radius: 50px; font-weight: 900; font-size: 16px; cursor: pointer;
+            text-transform: uppercase; transition: 0.3s;
+            box-shadow: 0 10px 30px rgba(88, 101, 242, 0.4);
+        }
+        .btn-start:hover { transform: translateY(-3px); background: #4752c4; }
+        .btn-start:active { transform: translateY(0); }
     </style>
 </head>
 <body>
-    <div class="menu-icon" onclick="window.location.href='/login.html'">
+
+    <div class="menu-admin" onclick="window.location.href='/login.html'">
         <div class="bar"></div><div class="bar"></div><div class="bar"></div>
     </div>
-    <div class="content">
-        <h1>VOCÊ PRECISA DE SUPORTE NO NOSSO EB?</h1>
-        <button class="btn-comecar" onclick="novoChamado()">COMEÇAR</button>
+
+    <div class="container">
+        <h1>VOCÊ PRECISA DE SUPORTE<br>NO NOSSO EB?</h1>
+        <button class="btn-start" id="btnEnviar" onclick="abrirTicket()">COMEÇAR ATENDIMENTO</button>
     </div>
+
     <script>
-        function novoChamado() {
-            const nick = prompt("Seu Nick no Discord:");
-            if(!nick) return;
-            db.ref('tickets').push({ nick: nick, status: "Aberto", time: Date.now() })
-            .then(() => alert("Chamado enviado! O Staff verá em instantes."));
+        function abrirTicket() {
+            const nick = prompt("Informe seu Nick do Discord:");
+            
+            if (!nick) {
+                alert("Operação cancelada. O Nick é obrigatório.");
+                return;
+            }
+
+            // Desativa o botão temporariamente para evitar cliques duplos
+            const btn = document.getElementById('btnEnviar');
+            btn.disabled = true;
+            btn.innerText = "ENVIANDO...";
+
+            // Referência para a pasta 'tickets' no seu Firebase
+            const ticketsRef = db.ref('tickets');
+            const novoTicket = ticketsRef.push();
+
+            // Grava os dados na nuvem
+            novoTicket.set({
+                nick: nick,
+                status: "aberto",
+                criadoEm: Date.now(),
+                mensagem: "Aguardando início do chat..."
+            })
+            .then(() => {
+                alert("Chamado enviado com sucesso! O militar Cay ou a equipe Staff já foram notificados.");
+                btn.disabled = false;
+                btn.innerText = "COMEÇAR ATENDIMENTO";
+            })
+            .catch((error) => {
+                console.error("Erro Firebase:", error);
+                alert("Erro ao conectar com o servidor. Verifique suas regras de segurança.");
+                btn.disabled = false;
+                btn.innerText = "COMEÇAR ATENDIMENTO";
+            });
         }
     </script>
 </body>
