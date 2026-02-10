@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>SISTEMA EB | AUTENTICAÇÃO</title>
+    <title>SISTEMA EB | LOGIN</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
@@ -10,40 +10,39 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: #020617; color: white; height: 100vh; display: flex; align-items: center; justify-content: center; }
-        .login-card { background: #0f172a; padding: 40px; border-radius: 20px; width: 100%; max-width: 350px; border: 1px solid #1e293b; text-align: center; }
-        h2 { color: #5865F2; font-size: 18px; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 2px; }
+        .login-box { background: #0f172a; padding: 40px; border-radius: 20px; width: 100%; max-width: 350px; border: 1px solid #1e293b; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        h2 { color: #5865F2; margin-bottom: 25px; letter-spacing: 2px; font-size: 18px; }
         input { width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #334155; background: #020617; color: white; outline: none; }
-        input:focus { border-color: #5865F2; }
         button { width: 100%; padding: 15px; background: #5865F2; color: white; border: none; border-radius: 10px; font-weight: 900; cursor: pointer; transition: 0.3s; }
         button:hover { background: #4752c4; }
     </style>
 </head>
 <body>
-    <div class="login-card">
-        <h2>ACESSO RESTRITO</h2>
-        <input type="email" id="email" placeholder="E-MAIL MILITAR">
-        <input type="password" id="password" placeholder="SENHA">
-        <button onclick="handleLogin()">ENTRAR NO SISTEMA</button>
+    <div class="login-box">
+        <h2>ACESSO MILITAR</h2>
+        <input type="email" id="email" placeholder="E-mail funcional">
+        <input type="password" id="pass" placeholder="Senha de acesso">
+        <button onclick="logar()">AUTENTICAR</button>
     </div>
 
     <script>
-        function handleLogin() {
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('password').value;
+        function logar() {
+            const e = document.getElementById('email').value;
+            const s = document.getElementById('pass').value;
 
-            auth.signInWithEmailAndPassword(email, pass)
-                .then((userCredential) => {
-                    const uid = userCredential.user.uid;
-                    db.ref('usuarios/' + uid).once('value').then((snap) => {
-                        const user = snap.val();
-                        if (user && user.cargo === 'DONO') {
-                            window.location.href = '/dono.html';
-                        } else {
-                            window.location.href = '/admin.html';
-                        }
-                    });
-                })
-                .catch(err => alert("Falha na Missão: " + err.message));
+            auth.signInWithEmailAndPassword(e, s).then((userCredential) => {
+                const uid = userCredential.user.uid;
+                // Busca os dados no nó 'usuarios' que você criou
+                db.ref('usuarios/' + uid).once('value').then((snap) => {
+                    const dados = snap.val();
+                    // Verifica o cargo em minúsculo conforme sua configuração
+                    if (dados && dados.cargo === 'dono') {
+                        window.location.href = 'dono.html';
+                    } else {
+                        window.location.href = 'admin.html';
+                    }
+                });
+            }).catch(err => alert("Acesso Negado: " + err.message));
         }
     </script>
 </body>
