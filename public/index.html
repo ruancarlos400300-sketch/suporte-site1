@@ -3,90 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Suporte EB | Orbitron</title>
+    <title>SISTEMA EB | OFICIAL</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
-        body { background: #020617; color: white; height: 100vh; width: 100vw; overflow: hidden; }
-
-        /* TELA DE ENTRADA */
-        #step-1 {
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        
+        body { 
+            background-color: #020617; 
+            color: white; 
+            height: 100vh; 
+            width: 100vw; 
+            overflow: hidden; 
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100%;
-            width: 100%;
-            text-align: center;
-            padding: 20px;
         }
 
-        h1 { font-size: 28px; font-weight: 900; margin-bottom: 40px; text-transform: uppercase; }
+        /* ÍCONE DAS TRÊS BARRINHAS */
+        .menu-icon {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            width: 30px;
+            height: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            z-index: 10001;
+        }
 
-        /* BOTÃO ROXO */
-        .btn-blue {
-            background: #5865F2;
+        .bar {
+            width: 100%;
+            height: 3px;
+            background-color: #FFFFFF;
+            border-radius: 10px;
+            transition: 0.3s;
+        }
+
+        /* MENU LATERAL (DRAWER) */
+        #side-menu {
+            position: fixed;
+            top: 0;
+            right: -300px; /* Escondido */
+            width: 280px;
+            height: 100vh;
+            background: #0f172a;
+            border-left: 1px solid rgba(255,255,255,0.05);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            padding: 80px 30px;
+            transition: 0.4s cubic-bezier(0.65, 0, 0.35, 1);
+        }
+
+        #side-menu.active {
+            right: 0;
+        }
+
+        .btn-cac-menu {
+            background-color: #FFFFFF;
+            color: #000000;
+            text-decoration: none;
+            padding: 18px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 900;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(255,255,255,0.1);
+        }
+
+        .menu-label {
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+        }
+
+        /* CONTEÚDO PRINCIPAL */
+        .main-content {
+            text-align: center;
+            z-index: 1;
+        }
+
+        h1 {
+            font-size: 26px;
+            font-weight: 900;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            line-height: 1.2;
+        }
+
+        .btn-player {
+            background-color: #5865F2;
             color: white;
             border: none;
             width: 280px;
-            padding: 20px;
-            border-radius: 15px;
+            padding: 22px;
+            border-radius: 50px;
             font-size: 18px;
             font-weight: 800;
             cursor: pointer;
-            margin-bottom: 20px;
-        }
-
-        /* BOTÃO CAC - BRANCO PARA CONTRASTE TOTAL */
-        .btn-white {
-            display: block !important;
-            background: #ffffff !important;
-            color: #000000 !important;
-            text-decoration: none !important;
-            width: 280px !important;
-            padding: 15px !important;
-            border-radius: 15px !important;
-            font-size: 14px !important;
-            font-weight: 900 !important;
-            text-align: center !important;
-            text-transform: uppercase !important;
-            letter-spacing: 1px !important;
+            box-shadow: 0 10px 20px rgba(88, 101, 242, 0.2);
         }
     </style>
 </head>
 <body>
 
-    <div id="step-1">
-        <h1>VOCÊ PRECISA DE<br>SUPORTE NO NOSSO EB?</h1>
-        
-        <button class="btn-blue" onclick="iniciar()">
-            COMEÇAR
-        </button>
-
-        <a href="/login.html" class="btn-white">
-            ENTRAR COMO CAC...
-        </a>
+    <div class="menu-icon" onclick="toggleMenu()">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
     </div>
 
-    <div id="step-2" style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100vh; background:#0f172a;">
-        <div style="width:90%; max-width:400px; background:#1e293b; padding:30px; border-radius:20px;">
-            <input type="text" id="nick" placeholder="NICK DISCORD" style="width:100%; padding:15px; margin-bottom:10px; border-radius:10px; border:none; background:#020617; color:white;">
-            <textarea id="prob" placeholder="PROBLEMA" style="width:100%; padding:15px; margin-bottom:10px; border-radius:10px; border:none; background:#020617; color:white; height:100px;"></textarea>
-            <button onclick="solicitar()" style="width:100%; padding:15px; background:#5865F2; color:white; border:none; border-radius:10px; font-weight:bold;">ABRIR CHAMADO</button>
-        </div>
+    <div id="side-menu">
+        <p class="menu-label">Administração</p>
+        <a href="/login.html" class="btn-cac-menu">Entrar como CAC</a>
+        
+        <p class="menu-label" style="margin-top: 40px;">Info</p>
+        <p style="color: #475569; font-size: 12px;">Versão 2.0.26<br>Orbitron System</p>
+    </div>
+
+    <div class="main-content">
+        <h1>VOCÊ PRECISA DE<br>SUPORTE NO NOSSO EB?</h1>
+        <button class="btn-player" onclick="alert('Iniciando triagem...')">COMEÇAR</button>
     </div>
 
     <script>
-        const socket = io();
-        function iniciar() {
-            document.getElementById('step-1').style.display = 'none';
-            document.getElementById('step-2').style.display = 'flex';
-        }
-        function solicitar() {
-            const n = document.getElementById('nick').value;
-            if(!n) return alert("Nick obrigatório");
-            socket.emit('solicitar_suporte', { nick: n, problema: document.getElementById('prob').value });
-            alert("Chamado aberto! Aguarde o staff.");
+        function toggleMenu() {
+            const menu = document.getElementById('side-menu');
+            menu.classList.toggle('active');
+            
+            // Animação simples nas barras (opcional)
+            const bars = document.querySelectorAll('.bar');
+            if(menu.classList.contains('active')) {
+                bars[0].style.transform = "rotate(45deg) translate(5px, 5px)";
+                bars[1].style.opacity = "0";
+                bars[2].style.transform = "rotate(-45deg) translate(7px, -7px)";
+            } else {
+                bars[0].style.transform = "none";
+                bars[1].style.opacity = "1";
+                bars[2].style.transform = "none";
+            }
         }
     </script>
 </body>
