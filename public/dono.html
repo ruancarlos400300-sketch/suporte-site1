@@ -2,84 +2,67 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>COMANDO SUPREMO | ORBITRON</title>
+    <title>COMANDO SUPREMO</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <script src="/firebase-config.js"></script>
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; font-family: sans-serif; }
-        body { background:#020617; color:white; display:flex; flex-direction:column; align-items:center; padding:50px; }
-        .card { background:#0f172a; border:1px solid #1e293b; padding:25px; border-radius:15px; width:100%; max-width:800px; }
-        h1 { color:#5865F2; margin-bottom:30px; text-transform:uppercase; letter-spacing:2px; }
-        table { width:100%; border-collapse: collapse; margin-top:20px; }
-        th, td { padding:15px; text-align:left; border-bottom:1px solid #1e293b; }
-        th { color:#64748b; font-size:12px; text-transform:uppercase; }
-        .btn-add { background:#10b981; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; font-weight:bold; }
-        .btn-edit { background:#5865F2; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer; margin-right:5px; }
-        input { background:#020617; border:1px solid #334155; color:white; padding:10px; border-radius:5px; margin-right:10px; }
+        body { background: #1e1f22; color: white; font-family: sans-serif; padding: 50px; }
+        .nav-menu { position: fixed; top: 20px; left: 20px; background: #5865f2; padding: 10px 20px; border-radius: 30px; cursor: pointer; z-index: 1000; box-shadow: 0 5px 15px rgba(88,101,242,0.4); }
+        .nav-content { display: none; position: absolute; top: 50px; left: 0; background: #2b2d31; border-radius: 12px; width: 200px; padding: 10px; border: 1px solid #3f4147; }
+        .nav-menu:hover .nav-content { display: block; }
+        .nav-link { display: block; padding: 10px; color: white; text-decoration: none; border-radius: 8px; margin-bottom: 5px; transition: 0.2s; }
+        .nav-link:hover { background: #35373c; color: #5865f2; }
+        
+        .membro-card { background: #2b2d31; padding: 20px; border-radius: 16px; display: inline-block; margin: 10px; border-top: 5px solid #5865f2; animation: scaleIn 0.3s ease; }
+        @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <h1>Painel de Controle do Dono</h1>
-
-    <div class="card">
-        <h3>Gerenciar Membros da Staff</h3>
-        <table id="tabela-membros">
-            <thead>
-                <tr>
-                    <th>Nome</th>
-                    <th>Cargo</th>
-                    <th>Pontos</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody id="corpo-tabela">
-                </tbody>
-        </table>
+    <div class="nav-menu">
+        ☰ MENU SUPREMO
+        <div class="nav-content">
+            <a href="/" class="nav-link">Página Player</a>
+            <a href="/login" class="nav-link">Página Login</a>
+            <a href="/admin" class="nav-link">Página Staff</a>
+            <hr style="opacity:0.1; margin:10px 0;">
+            <a href="#" onclick="auth.signOut()" class="nav-link" style="color:#ed4245">Deslogar</a>
+        </div>
     </div>
 
+    <h1>Oficiais Orbitron</h1>
+    <div id="membros"></div>
+
     <script>
-        // TRAVA DE SEGURANÇA: Só o 'dono' entra aqui
         auth.onAuthStateChanged(user => {
-            if (user) {
+            if(user) {
                 db.ref('usuarios/' + user.uid).once('value', snap => {
-                    const d = snap.val();
-                    if (!d || d.cargo !== 'dono') {
-                        alert("ACESSO NEGADO: Apenas o Dono pode acessar esta página.");
-                        window.location.href = 'admin.html';
-                    }
+                    if(snap.val().cargo !== 'dono') window.location.href = '/admin';
                 });
-            } else { window.location.href = 'login.html'; }
+            } else { window.location.href = '/login'; }
         });
 
-        // CARREGAR LISTA DE MILITARES
         db.ref('usuarios').on('value', snap => {
-            const tbody = document.getElementById('corpo-tabela');
-            tbody.innerHTML = "";
-            snap.forEach(membro => {
-                const m = membro.val();
-                const id = membro.key;
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${m.nome}</td>
-                    <td><span style="color:#5865F2">${m.cargo}</span></td>
-                    <td><strong>${m.pontos}</strong></td>
-                    <td>
-                        <button class="btn-edit" onclick="alterarPontos('${id}', 100)">+100</button>
-                        <button class="btn-edit" onclick="alterarPontos('${id}', -100)" style="background:#ef4444">-100</button>
-                    </td>
+            const div = document.getElementById('membros');
+            div.innerHTML = "";
+            snap.forEach(m => {
+                const u = m.val();
+                div.innerHTML += `
+                    <div class="membro-card">
+                        <h3>${u.nome}</h3>
+                        <p style="color:#b5bac1">${u.cargo.toUpperCase()}</p>
+                        <h2 style="color:#23a559; margin:10px 0;">${u.pontos.toFixed(1)} PTS</h2>
+                        <button onclick="add('${m.key}', 1)">+1 PT</button>
+                        <button onclick="add('${m.key}', -1)">-1 PT</button>
+                    </div>
                 `;
-                tbody.appendChild(tr);
             });
         });
 
-        function alterarPontos(uid, valor) {
-            const ref = db.ref('usuarios/' + uid + '/pontos');
-            ref.transaction(ptsAtual => {
-                return (ptsAtual || 0) + valor;
-            });
+        function add(uid, v) {
+            db.ref('usuarios/' + uid + '/pontos').transaction(p => (p || 0) + v);
         }
     </script>
 </body>
