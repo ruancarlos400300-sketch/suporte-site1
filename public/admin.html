@@ -3,118 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orbitron Admin | Painel de Controle</title>
+    <title>Orbitron Admin | Command Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="/socket.io/socket.io.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #020617; color: #f8fafc; }
-        .sidebar { background: rgba(15, 23, 42, 0.95); border-right: 1px solid rgba(255,255,255,0.05); }
-        .chat-list-item:hover { background: rgba(99, 102, 241, 0.1); }
-        .chat-active { background: rgba(99, 102, 241, 0.15); border-left: 4px solid #6366f1; }
-        .glass-card { background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
+        :root { --bg-panel: #020617; --accent: #6366f1; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-panel); color: #f8fafc; }
+        
+        .sidebar-glass { background: rgba(15, 23, 42, 0.8); border-right: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(10px); }
+        .chat-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border-left: 4px solid transparent; }
+        .chat-card:hover { background: rgba(99, 102, 241, 0.05); }
+        .chat-active { background: rgba(99, 102, 241, 0.12); border-left-color: var(--accent); }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        
+        .message-bubble-admin { background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%); border-radius: 18px 18px 2px 18px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); }
+        .message-bubble-client { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px 18px 18px 2px; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
 
-    <aside class="sidebar w-20 lg:w-64 flex flex-col transition-all">
-        <div class="p-6">
-            <h2 class="text-indigo-500 font-extrabold text-xl tracking-tighter hidden lg:block">ORBITRON <span class="text-white text-[10px] ml-1 border border-white/20 px-1 rounded">ADMIN</span></h2>
-            <div class="lg:hidden flex justify-center"><i data-lucide="command" class="text-indigo-500"></i></div>
+    <aside class="sidebar-glass w-20 lg:w-72 flex flex-col transition-all">
+        <div class="p-8">
+            <h2 class="text-white font-extrabold text-2xl tracking-tighter flex items-center gap-3">
+                <i data-lucide="layers" class="text-indigo-500"></i>
+                <span class="hidden lg:block">ORBITRON</span>
+            </h2>
+            <p class="text-[10px] text-slate-500 font-bold tracking-[0.3em] mt-2 hidden lg:block uppercase">Admin Suite v1.0</p>
         </div>
 
         <nav class="flex-1 px-4 space-y-2">
-            <a href="#" class="flex items-center gap-3 p-3 rounded-xl bg-indigo-600/10 text-indigo-400">
-                <i data-lucide="message-square"></i>
-                <span class="font-medium hidden lg:block">Chats Ativos</span>
+            <div class="px-4 py-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest hidden lg:block text-center">Menu Principal</div>
+            <a href="#" class="flex items-center gap-4 p-4 rounded-2xl bg-indigo-600/10 text-indigo-400 group">
+                <i data-lucide="message-circle"></i>
+                <span class="font-semibold hidden lg:block">Atendimentos</span>
             </a>
-            <a href="#" class="flex items-center gap-3 p-3 rounded-xl text-slate-400 hover:bg-white/5 transition-all">
+            <a href="#" class="flex items-center gap-4 p-4 rounded-2xl text-slate-500 hover:bg-white/5 transition-all group">
                 <i data-lucide="users"></i>
-                <span class="font-medium hidden lg:block">Gerenciar Equipe</span>
+                <span class="font-semibold hidden lg:block">Equipe Profissional</span>
             </a>
-            <a href="#" class="flex items-center gap-3 p-3 rounded-xl text-slate-400 hover:bg-white/5 transition-all">
-                <i data-lucide="bar-chart-3"></i>
-                <span class="font-medium hidden lg:block">Relatórios</span>
+            <a href="#" class="flex items-center gap-4 p-4 rounded-2xl text-slate-500 hover:bg-white/5 transition-all group">
+                <i data-lucide="shield-check"></i>
+                <span class="font-semibold hidden lg:block">Segurança & Logs</span>
             </a>
         </nav>
 
-        <div class="p-4 mt-auto border-t border-white/5">
-            <div class="flex items-center gap-3 p-2">
-                <div class="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center font-bold text-white">D</div>
+        <div class="p-6 mt-auto border-t border-white/5 bg-black/20">
+            <div class="flex items-center gap-4">
+                <div class="relative">
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-lg">D</div>
+                    <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-4 border-[#020617] rounded-full"></div>
+                </div>
                 <div class="hidden lg:block">
-                    <p class="text-xs font-bold">Dono do Sistema</p>
-                    <p class="text-[10px] text-emerald-400 uppercase">Acesso Total</p>
+                    <p class="text-sm font-bold text-white leading-none">Dono do Sistema</p>
+                    <p class="text-[10px] text-indigo-400 font-bold mt-1">SESSÃO ENCRYPTADA</p>
                 </div>
             </div>
         </div>
     </aside>
 
-    <section class="w-80 border-r border-white/5 flex flex-col bg-slate-900/30">
-        <div class="p-6 border-b border-white/5 flex justify-between items-center">
-            <h3 class="font-bold text-lg">Conversas</h3>
-            <span class="bg-indigo-600 text-[10px] px-2 py-1 rounded-full font-bold">12 NOVOS</span>
-        </div>
-        <div class="flex-1 overflow-y-auto">
-            <div class="chat-list-item chat-active p-4 cursor-pointer transition-all border-b border-white/5">
-                <div class="flex justify-between mb-1">
-                    <span class="text-sm font-semibold text-white">Cliente #8429</span>
-                    <span class="text-[10px] text-slate-500">2 min ago</span>
-                </div>
-                <p class="text-xs text-slate-400 truncate italic">"Olá, gostaria de saber sobre o status do..."</p>
+    <section class="w-80 lg:w-96 border-r border-white/5 flex flex-col bg-slate-900/10">
+        <div class="p-8 border-b border-white/5">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-extrabold text-xl">Chats</h3>
+                <span id="chat-count" class="bg-indigo-600 text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-tighter">0 Ativos</span>
             </div>
-            
-            <div class="chat-list-item p-4 cursor-pointer transition-all border-b border-white/5 opacity-60">
-                <div class="flex justify-between mb-1">
-                    <span class="text-sm font-semibold text-white">Cliente #8425</span>
-                    <span class="text-[10px] text-slate-500">15 min ago</span>
-                </div>
-                <p class="text-xs text-slate-400 truncate">Atendido por: Atendente João</p>
+            <div class="relative">
+                <i data-lucide="search" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                <input type="text" placeholder="Filtrar clientes..." class="w-full bg-black/20 border border-white/5 rounded-xl py-3 pl-12 text-xs focus:outline-none focus:border-indigo-500 transition-all">
             </div>
         </div>
+        
+        <div id="admin-chat-list" class="flex-1 overflow-y-auto custom-scrollbar">
+            </div>
     </section>
 
-    <main class="flex-1 flex flex-col bg-black/40">
-        <header class="p-6 border-b border-white/5 flex justify-between items-center bg-slate-900/20">
-            <div class="flex items-center gap-4">
-                <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+    <main class="flex-1 flex flex-col relative bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]">
+        
+        <header class="p-6 md:p-8 border-b border-white/5 flex justify-between items-center bg-slate-900/40 backdrop-blur-md">
+            <div class="flex items-center gap-5">
+                <div id="active-client-icon" class="w-14 h-14 rounded-[1.2rem] bg-slate-800 flex items-center justify-center border border-white/10 text-slate-400">
+                    <i data-lucide="user"></i>
+                </div>
                 <div>
-                    <h4 class="font-bold text-sm">Cliente #8429</h4>
-                    <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Aguardando Resposta</p>
+                    <h4 id="active-client-name" class="font-bold text-lg text-white">Selecione um cliente</h4>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500" id="active-client-status">Aguardando Seleção</span>
+                    </div>
                 </div>
             </div>
-            <div class="flex gap-2">
-                <button class="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-xs font-semibold transition-all">Finalizar Chat</button>
-                <button class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-xs font-semibold transition-all">Assumir Ticket</button>
+            <div class="flex gap-3">
+                <button class="p-3 bg-white/5 hover:bg-white/10 rounded-xl text-slate-300 transition-all"><i data-lucide="info"></i></button>
+                <button class="px-6 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl text-xs font-bold transition-all border border-red-500/20">ENCERRAR CASO</button>
             </div>
         </header>
 
-        <div class="flex-1 overflow-y-auto p-8 space-y-6">
-            <div class="flex flex-col items-center opacity-30 my-8">
-                <div class="h-px w-full bg-white/10 mb-4"></div>
-                <span class="text-[10px] font-bold tracking-widest uppercase">Chat Iniciado às 14:30</span>
-            </div>
-            <div class="flex gap-4 max-w-2xl">
-                <div class="w-8 h-8 rounded-lg bg-slate-800 border border-white/10 flex items-center justify-center shrink-0">C</div>
-                <div class="glass-card p-4 rounded-2xl rounded-tl-none">
-                    <p class="text-sm leading-relaxed text-slate-300">Gostaria de solicitar uma análise profissional do meu sistema. Como devo proceder?</p>
-                </div>
+        <div id="admin-messages" class="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar">
+            <div class="flex flex-col items-center opacity-20 py-10">
+                <i data-lucide="shield-check" class="w-12 h-12 mb-4"></i>
+                <p class="text-xs font-bold uppercase tracking-[0.3em]">Ambiente de Atendimento Seguro</p>
             </div>
         </div>
 
-        <footer class="p-8 bg-slate-900/40">
-            <div class="relative">
-                <textarea rows="2" placeholder="Escreva sua resposta profissional..." 
-                    class="w-full bg-slate-900 border border-white/10 rounded-2xl p-4 pr-32 text-sm focus:outline-none focus:border-indigo-500 transition-all resize-none"></textarea>
-                <button class="absolute right-3 bottom-3 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
-                    RESPONDER <i data-lucide="send" class="w-3 h-3"></i>
-                </button>
+        <footer class="p-8 bg-gradient-to-t from-black/40 to-transparent">
+            <div class="max-w-4xl mx-auto relative group">
+                <textarea id="admin-input" rows="1" placeholder="Escreva uma resposta oficial e profissional..." 
+                    class="w-full bg-slate-900/80 border border-white/10 rounded-2xl py-5 pl-6 pr-40 text-sm focus:outline-none focus:border-indigo-500 transition-all resize-none shadow-2xl"></textarea>
+                
+                <div class="absolute right-3 bottom-3 flex gap-2">
+                    <button class="p-3 text-slate-500 hover:text-white transition-colors"><i data-lucide="paperclip" class="w-5 h-5"></i></button>
+                    <button id="send-admin-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-8 rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-indigo-600/20">
+                        RESPONDER <i data-lucide="send" class="w-4 h-4"></i>
+                    </button>
+                </div>
             </div>
         </footer>
     </main>
 
     <script>
         lucide.createIcons();
+        const socket = io();
+        let currentClientId = null;
+
+        socket.emit('admin_join');
+
+        // Atualiza Lista de Clientes
+        socket.on('update_admin_list', (chats) => {
+            const list = document.getElementById('admin-chat-list');
+            document.getElementById('chat-count').innerText = `${chats.length} Ativos`;
+            
+            list.innerHTML = chats.map(chat => `
+                <div onclick="selectChat('${chat.id}')" class="chat-card p-6 cursor-pointer border-b border-white/5 ${currentClientId === chat.id ? 'chat-active' : ''}">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-sm font-bold text-white tracking-tight">ID: #${chat.id.substring(0,8)}</span>
+                        <span class="text-[9px] bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded font-black uppercase">Online</span>
+                    </div>
+                    <p class="text-xs text-slate-500 font-medium">Clique para abrir canal de comunicação direta.</p>
+                </div>
+            `).join('');
+        });
+
+        function selectChat(id) {
+            currentClientId = id;
+            document.getElementById('active-client-name').innerText = `Cliente #${id.substring(0,8)}`;
+            document.getElementById('active-client-status').innerText = `Canal de Resposta Aberto`;
+            document.getElementById('active-client-status').classList.replace('text-slate-500', 'text-emerald-400');
+            document.getElementById('active-client-icon').classList.replace('bg-slate-800', 'bg-indigo-600');
+            document.getElementById('active-client-icon').innerHTML = `<i data-lucide="message-square" class="text-white"></i>`;
+            lucide.createIcons();
+            
+            // Marca o item na lista como selecionado visualmente
+            socket.emit('admin_join'); // Atualiza a lista para refletir o active
+        }
+
+        function appendAdminMsg(text, type) {
+            const box = document.getElementById('admin-messages');
+            const div = document.createElement('div');
+            div.className = `flex ${type === 'admin' ? 'justify-end' : 'justify-start'} w-full animate-in slide-in-from-bottom-2`;
+            
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            if(type === 'admin') {
+                div.innerHTML = `<div class="message-bubble-admin p-4 max-w-md text-sm text-white shadow-xl">${text}<span class="block text-[9px] text-indigo-200 mt-2 font-bold uppercase tracking-widest text-right">${time} · Você</span></div>`;
+            } else {
+                div.innerHTML = `<div class="message-bubble-client p-4 max-w-md text-sm text-slate-300 border border-white/5">${text}<span class="block text-[9px] text-slate-500 mt-2 font-bold uppercase tracking-widest">${time} · Cliente</span></div>`;
+            }
+            
+            box.appendChild(div);
+            box.scrollTo({ top: box.scrollHeight, behavior: 'smooth' });
+        }
+
+        document.getElementById('send-admin-btn').addEventListener('click', () => {
+            const input = document.getElementById('admin-input');
+            if(input.value.trim() && currentClientId) {
+                socket.emit('admin_send_msg', { 
+                    clientId: currentClientId, 
+                    text: input.value,
+                    adminName: 'Proprietário' 
+                });
+                appendAdminMsg(input.value, 'admin');
+                input.value = '';
+            } else if (!currentClientId) {
+                alert("ERRO: Selecione um cliente ativo para responder.");
+            }
+        });
+
+        socket.on('admin_receive_msg', (data) => {
+            if(data.clientId === currentClientId) {
+                appendAdminMsg(data.text, 'client');
+            }
+        });
     </script>
 </body>
 </html>
