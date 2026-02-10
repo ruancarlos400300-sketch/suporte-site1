@@ -102,6 +102,19 @@
             document.getElementById('nome-atendimento').innerText = "AGUARDANDO SELEÇÃO...";
             alert("Chamado encerrado. Painel desbloqueado.");
         });
+        // Adicione este trecho no script do seu admin.html
+db.ref('chamados').on('child_added', (snapshot) => {
+    const chamado = snapshot.val();
+    const id = snapshot.key;
+    
+    // Aqui o código cria o botão do canal automaticamente na barra lateral
+    const lista = document.getElementById('lista-canais');
+    const item = document.createElement('div');
+    item.innerHTML = `<div onclick="abrirChat('${id}')" class="ticket"># ${chamado.nick}</div>`;
+    lista.appendChild(item);
+});
+
     </script>
+
 </body>
 </html>
