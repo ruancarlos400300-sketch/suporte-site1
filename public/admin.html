@@ -2,65 +2,62 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>PAINEL CAC | OPERACIONAL</title>
+    <title>PAINEL CAC | OPERAÇÕES</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <script src="/firebase-config.js"></script>
     <style>
         body { background: #020617; color: white; font-family: sans-serif; display: flex; height: 100vh; margin: 0; }
         aside { width: 280px; background: #0f172a; border-right: 1px solid #1e293b; display: flex; flex-direction: column; }
-        .staff-info { padding: 20px; border-bottom: 1px solid #1e293b; background: #111827; }
-        .score { color: #10b981; font-weight: 900; font-size: 14px; }
-        #tickets-list { flex: 1; padding: 15px; overflow-y: auto; }
-        .ticket { background: #1e293b; padding: 15px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; border-left: 4px solid #5865F2; }
-        main { flex: 1; display: flex; flex-direction: column; padding: 25px; }
-        #chat-window { flex: 1; background: rgba(0,0,0,0.3); border-radius: 20px; padding: 20px; margin-bottom: 20px; overflow-y: auto; }
-        input#reply { width: 100%; padding: 20px; border-radius: 12px; border: none; background: #0f172a; color: white; }
+        .header-perfil { padding: 25px; border-bottom: 1px solid #1e293b; background: #111827; }
+        .nome-militar { font-weight: 900; color: #5865F2; text-transform: uppercase; margin-bottom: 5px; }
+        .pts-militar { color: #10b981; font-weight: bold; font-size: 14px; }
+        main { flex: 1; padding: 30px; display: flex; flex-direction: column; }
+        #chat-area { flex: 1; background: rgba(0,0,0,0.3); border-radius: 20px; padding: 20px; border: 1px solid #1e293b; }
     </style>
 </head>
 <body>
     <aside>
-        <div class="staff-info">
-            <p id="staff-name">Carregando...</p>
-            <p class="score">PTS: <span id="staff-pts">0</span></p>
+        <div class="header-perfil">
+            <p class="nome-militar" id="staff-name">CARREGANDO...</p>
+            <p class="pts-militar">PONTOS: <span id="staff-pts">0</span></p>
         </div>
-        <div id="tickets-list"></div>
+        <div id="lista-chamados" style="padding: 15px;"></div>
     </aside>
+
     <main>
-        <h3 id="chat-target">Selecione um chamado</h3>
-        <div id="chat-window"></div>
-        <input type="text" id="reply" placeholder="Enviar resposta segura...">
+        <h2 style="margin-bottom: 20px;">CENTRAL DE ATENDIMENTO</h2>
+        <div id="chat-area">
+            <p style="color: #64748b;">Aguardando novo chamado...</p>
+        </div>
     </main>
 
     <script>
-        let currentTicket = null;
-
+        // Monitoramento de login e dados do militar
         auth.onAuthStateChanged(user => {
             if (user) {
-                db.ref('usuarios/' + user.uid).on('value', snap => {
+                // Conecta aos campos 'nome' e 'pontos' que você criou
+                db.ref('usuarios/' + user.uid).on('value', (snap) => {
                     const data = snap.val();
-                    document.getElementById('staff-name').innerText = data.nome;
-                    document.getElementById('staff-pts').innerText = data.pontos;
+                    if (data) {
+                        document.getElementById('staff-name').innerText = data.nome; // Exibirá 'cay'
+                        document.getElementById('staff-pts').innerText = data.pontos; // Exibirá '12000'
+                    }
                 });
-            } else { window.location.href = '/login.html'; }
+            } else {
+                window.location.href = 'login.html';
+            }
         });
 
+        // Ouvinte de novos chamados na nuvem
         db.ref('tickets').on('child_added', snap => {
             const t = snap.val();
-            const id = snap.key;
             const div = document.createElement('div');
-            div.className = 'ticket';
-            div.innerHTML = `<strong>${t.nick}</strong><br><small>Aguardando...</small>`;
-            div.onclick = () => selectTicket(id, t.nick);
-            document.getElementById('tickets-list').appendChild(div);
+            div.style = "background:#1e293b; padding:15px; border-radius:10px; margin-bottom:10px; border-left:4px solid #5865F2; cursor:pointer;";
+            div.innerHTML = `<strong># ${t.nick}</strong>`;
+            document.getElementById('lista-chamados').appendChild(div);
         });
-
-        function selectTicket(id, nick) {
-            currentTicket = id;
-            document.getElementById('chat-target').innerText = "ATENDENDO: " + nick;
-            // Lógica de carregar mensagens aqui...
-        }
     </script>
 </body>
 </html>
