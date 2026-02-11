@@ -3,51 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>COMANDO SUPREMO | ORBITRON</title>
+    <title>DONO | ORBITRON</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <script src="/firebase-config.js"></script>
     <style>
-        :root { --bg: #1e1f22; --card: #2b2d31; --blue: #5865f2; --green: #23a559; --red: #ed4245; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'gg sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-        
-        body { background: var(--bg); color: white; padding: 100px 20px; text-align: center; overflow-x: hidden; }
+        :root { --bg: #1e1f22; --card: #2b2d31; --blue: #5865f2; --green: #23a559; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: white; padding: 100px 20px; text-align: center; }
 
-        /* MENU DESLIZANTE PROFISSIONAL */
+        /* MENU DESLIZANTE */
         .nav-container { position: fixed; top: 20px; left: 20px; z-index: 1000; }
-        #menu-trigger { background: var(--blue); padding: 12px 25px; border-radius: 30px; font-weight: bold; cursor: pointer; user-select: none; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        #drop-menu { position: absolute; top: 55px; left: 0; background: var(--card); width: 220px; border-radius: 12px; padding: 8px; display: none; border: 1px solid #3f4147; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        .menu-item { padding: 12px 15px; border-radius: 8px; margin-bottom: 4px; color: #b5bac1; font-weight: 500; transition: 0.1s; }
+        #menu-trigger { background: var(--blue); padding: 12px 25px; border-radius: 30px; font-weight: bold; cursor: pointer; user-select: none; }
+        #drop-menu { position: absolute; top: 55px; left: 0; background: var(--card); width: 200px; border-radius: 12px; padding: 10px; display: none; border: 1px solid #3f4147; }
+        .menu-item { padding: 12px; border-radius: 8px; color: #b5bac1; transition: 0.1s; cursor: pointer; }
         .menu-item.selected { background: #35373c; color: white; transform: translateX(5px); }
 
-        /* SEÇÃO ADICIONAR STAFF (ANIMADA) */
-        .add-staff-box { 
-            background: var(--card); max-width: 600px; margin: 0 auto 40px; padding: 25px; 
-            border-radius: 20px; border: 1px solid #3f4147; animation: slideDown 0.5s ease;
-        }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        /* FERRAMENTAS */
+        .grid-tools { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; max-width: 1000px; margin: 0 auto 40px; }
+        .tool-box { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid #3f4147; text-align: left; }
+        input, select { width: 100%; padding: 12px; background: #1e1f22; border: 1px solid #3f4147; color: white; border-radius: 8px; margin: 10px 0; outline: none; }
+        button { background: var(--green); color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; }
         
-        .form-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 15px; }
-        input, select { background: #1e1f22; border: 1px solid #3f4147; color: white; padding: 12px; border-radius: 10px; outline: none; }
-        .btn-add { background: var(--green); border: none; color: white; padding: 12px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-add:hover { background: #1a8a4a; transform: scale(1.05); }
-
-        /* GRID DE MEMBROS */
-        .membros-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
-        .membro-card { 
-            background: var(--card); padding: 25px; border-radius: 20px; width: 280px;
-            border-bottom: 5px solid var(--blue); transition: 0.3s; position: relative;
-        }
-        .membro-card:hover { transform: translateY(-10px); }
-        .pts-badge { font-size: 28px; color: var(--green); font-weight: 800; margin: 10px 0; }
-        .btn-del { position: absolute; top: 10px; right: 10px; background: none; border: none; color: var(--red); cursor: pointer; font-size: 18px; opacity: 0.5; }
-        .btn-del:hover { opacity: 1; }
-        
-        .badge { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 5px; text-transform: uppercase; margin-bottom: 5px; display: inline-block; }
-        .badge-atendente { background: var(--blue); }
-        .badge-superior { background: #faa61a; }
-        .badge-dono { background: var(--red); }
+        .membro-card { background: var(--card); padding: 20px; border-radius: 20px; display: inline-block; margin: 10px; width: 250px; border-bottom: 4px solid var(--blue); }
     </style>
 </head>
 <body>
@@ -55,112 +33,76 @@
     <div class="nav-container">
         <div id="menu-trigger">☰ SEGURE PARA NAVEGAR</div>
         <div id="drop-menu">
-            <div class="menu-item" data-url="/">PÁGINA PLAYER</div>
-            <div class="menu-item" data-url="/login">TELA DE LOGIN</div>
+            <div class="menu-item" data-url="/">SUPORTE PLAYER</div>
             <div class="menu-item" data-url="/admin">PAINEL STAFF</div>
-            <div class="menu-item" data-url="#" onclick="auth.signOut()">SAIR</div>
+            <div class="menu-item" data-url="/login">LOGOUT</div>
         </div>
     </div>
 
-    <div class="add-staff-box">
-        <h3>Recrutar Novo Militar</h3>
-        <p style="font-size: 12px; color: #b5bac1; margin-bottom: 15px;">Cole o UID do militar (encontrado no Firebase Auth)</p>
-        <div class="form-row">
-            <input type="text" id="uid-input" placeholder="UID do Usuário">
-            <input type="text" id="nome-input" placeholder="Nome/Nick">
-            <select id="cargo-input">
-                <option value="atendente">ATENDENTE</option>
-                <option value="superior">SUPERIOR</option>
-            </select>
-            <button class="btn-add" onclick="salvarMilitar()">ADICIONAR</button>
+    <div class="grid-tools">
+        <div class="tool-box">
+            <h3>Gerar Novo Acesso</h3>
+            <input type="text" id="staff-nick" placeholder="Nick do Militar">
+            <select id="staff-cargo"><option value="atendente">ATENDENTE</option><option value="superior">SUPERIOR</option></select>
+            <button onclick="gerarChave()">GERAR CHAVE</button>
+            <div id="result-key" style="margin-top:15px; color:#faa61a; font-family:monospace; font-size:20px; text-align:center;"></div>
+        </div>
+
+        <div class="tool-box">
+            <h3>Rastrear Responsável</h3>
+            <input type="text" id="search-key" placeholder="Cole a chave aqui">
+            <button style="background:var(--blue)" onclick="buscar()">PESQUISAR</button>
+            <p id="result-search" style="margin-top:15px; text-align:center; font-weight:bold;"></p>
         </div>
     </div>
 
-    <h1>Efetivo Orbitron</h1>
-    <div class="membros-grid" id="lista-membros"></div>
+    <h1>Oficiais Orbitron</h1>
+    <div id="lista-membros"></div>
 
     <script>
-        // LÓGICA DO MENU DE DESLIZE
+        // MENU LOGIC
         const trigger = document.getElementById('menu-trigger');
         const menu = document.getElementById('drop-menu');
         const items = document.querySelectorAll('.menu-item');
         let isHolding = false;
-
-        const start = () => { isHolding = true; menu.style.display = 'block'; };
-        const end = () => {
-            if (!isHolding) return;
-            isHolding = false; menu.style.display = 'none';
-            const sel = document.querySelector('.menu-item.selected');
-            if (sel && sel.dataset.url !== "#") window.location.href = sel.dataset.url;
-        };
-        const move = (e) => {
-            if (!isHolding) return;
-            const p = e.touches ? e.touches[0] : e;
-            const target = document.elementFromPoint(p.clientX, p.clientY);
+        trigger.addEventListener('mousedown', () => { isHolding = true; menu.style.display = 'block'; });
+        window.addEventListener('mouseup', () => {
+            if(isHolding) {
+                const sel = document.querySelector('.menu-item.selected');
+                if(sel) window.location.href = sel.dataset.url;
+                menu.style.display = 'none'; isHolding = false;
+            }
+        });
+        window.addEventListener('mousemove', (e) => {
+            if(!isHolding) return;
+            const target = document.elementFromPoint(e.clientX, e.clientY);
             items.forEach(i => i.classList.toggle('selected', i === target));
-        };
-
-        trigger.addEventListener('mousedown', start);
-        window.addEventListener('mouseup', end);
-        window.addEventListener('mousemove', move);
-        trigger.addEventListener('touchstart', (e) => { e.preventDefault(); start(); });
-        window.addEventListener('touchend', end);
-        window.addEventListener('touchmove', move);
-
-        // LÓGICA DO FIREBASE
-        auth.onAuthStateChanged(user => {
-            if(user) {
-                db.ref('usuarios/' + user.uid).once('value', snap => {
-                    if(!snap.val() || snap.val().cargo !== 'dono') window.location.href = '/admin';
-                });
-            } else { window.location.href = '/login'; }
         });
 
-        function salvarMilitar() {
-            const uid = document.getElementById('uid-input').value.trim();
-            const nome = document.getElementById('nome-input').value.trim();
-            const cargo = document.getElementById('cargo-input').value;
+        // ADMIN LOGIC
+        function gerarChave() {
+            const nick = document.getElementById('staff-nick').value;
+            if(!nick) return;
+            const chave = "ORB-" + Math.random().toString(36).substr(2, 6).toUpperCase();
+            db.ref('logins_gerados/' + chave).set({ responsavel: nick, cargo: document.getElementById('staff-cargo').value });
+            document.getElementById('result-key').innerText = chave;
+        }
 
-            if(!uid || !nome) return alert("Preencha todos os campos!");
-
-            db.ref('usuarios/' + uid).set({
-                nome: nome,
-                cargo: cargo,
-                pontos: 0
-            }).then(() => {
-                alert("Militar registrado com sucesso!");
-                document.getElementById('uid-input').value = "";
-                document.getElementById('nome-input').value = "";
+        function buscar() {
+            const k = document.getElementById('search-key').value.trim();
+            db.ref('logins_gerados/' + k).once('value', s => {
+                document.getElementById('result-search').innerText = s.val() ? "Membro: " + s.val().responsavel : "Não encontrado";
             });
         }
 
         db.ref('usuarios').on('value', snap => {
-            const container = document.getElementById('lista-membros');
-            container.innerHTML = "";
+            const div = document.getElementById('lista-membros');
+            div.innerHTML = "";
             snap.forEach(m => {
                 const u = m.val();
-                container.innerHTML += `
-                    <div class="membro-card">
-                        <button class="btn-del" onclick="removerMembro('${m.key}')">×</button>
-                        <span class="badge badge-${u.cargo}">${u.cargo}</span>
-                        <h2>${u.nome}</h2>
-                        <div class="pts-badge">${u.pontos.toFixed(1)}</div>
-                        <div style="display:flex; gap:5px; justify-content:center;">
-                            <button onclick="editPts('${m.key}', 1)" style="padding:5px 10px; cursor:pointer;">+1</button>
-                            <button onclick="editPts('${m.key}', -1)" style="padding:5px 10px; cursor:pointer;">-1</button>
-                        </div>
-                    </div>
-                `;
+                div.innerHTML += `<div class="membro-card"><h4>${u.nome}</h4><p>${u.cargo}</p><h2>${(u.pontos || 0).toFixed(1)} PTS</h2></div>`;
             });
         });
-
-        function editPts(uid, val) {
-            db.ref('usuarios/' + uid + '/pontos').transaction(p => (p || 0) + val);
-        }
-
-        function removerMembro(uid) {
-            if(confirm("Expulsar este militar do sistema?")) db.ref('usuarios/' + uid).remove();
-        }
     </script>
 </body>
 </html>
