@@ -1,34 +1,18 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
     <title>DONO | ORBITRON</title>
+
+    <link rel="stylesheet" href="/styles.css">
+
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <script src="/firebase-config.js"></script>
-    <style>
-        :root { --bg: #1e1f22; --card: #2b2d31; --blue: #5865f2; --green: #23a559; }
-        * { margin:0; padding:0; box-sizing:border-box; font-family: sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: white; padding: 100px 20px; text-align: center; }
-
-        /* MENU DESLIZANTE */
-        .nav-container { position: fixed; top: 20px; left: 20px; z-index: 1000; }
-        #menu-trigger { background: var(--blue); padding: 12px 25px; border-radius: 30px; font-weight: bold; cursor: pointer; user-select: none; }
-        #drop-menu { position: absolute; top: 55px; left: 0; background: var(--card); width: 200px; border-radius: 12px; padding: 10px; display: none; border: 1px solid #3f4147; }
-        .menu-item { padding: 12px; border-radius: 8px; color: #b5bac1; transition: 0.1s; cursor: pointer; }
-        .menu-item.selected { background: #35373c; color: white; transform: translateX(5px); }
-
-        /* FERRAMENTAS */
-        .grid-tools { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; max-width: 1000px; margin: 0 auto 40px; }
-        .tool-box { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid #3f4147; text-align: left; }
-        input, select { width: 100%; padding: 12px; background: #1e1f22; border: 1px solid #3f4147; color: white; border-radius: 8px; margin: 10px 0; outline: none; }
-        button { background: var(--green); color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; }
-        
-        .membro-card { background: var(--card); padding: 20px; border-radius: 20px; display: inline-block; margin: 10px; width: 250px; border-bottom: 4px solid var(--blue); }
-    </style>
 </head>
-<body>
+<body class="body-dono">
 
     <div class="nav-container">
         <div id="menu-trigger">☰ SEGURE PARA NAVEGAR</div>
@@ -42,65 +26,100 @@
     <div class="grid-tools">
         <div class="tool-box">
             <h3>Gerar Novo Acesso</h3>
+            <p>Vincule um Nick a uma chave ORB.</p>
             <input type="text" id="staff-nick" placeholder="Nick do Militar">
-            <select id="staff-cargo"><option value="atendente">ATENDENTE</option><option value="superior">SUPERIOR</option></select>
-            <button onclick="gerarChave()">GERAR CHAVE</button>
-            <div id="result-key" style="margin-top:15px; color:#faa61a; font-family:monospace; font-size:20px; text-align:center;"></div>
+            <select id="staff-cargo">
+                <option value="atendente">ATENDENTE</option>
+                <option value="superior">SUPERIOR</option>
+            </select>
+            <button class="btn-green" onclick="gerarChave()">GERAR CHAVE</button>
+            <div id="result-key"></div>
         </div>
 
         <div class="tool-box">
             <h3>Rastrear Responsável</h3>
+            <p>Descubra quem é o dono da chave.</p>
             <input type="text" id="search-key" placeholder="Cole a chave aqui">
-            <button style="background:var(--blue)" onclick="buscar()">PESQUISAR</button>
-            <p id="result-search" style="margin-top:15px; text-align:center; font-weight:bold;"></p>
+            <button class="btn-blue" onclick="buscar()">PESQUISAR</button>
+            <div id="result-search"></div>
         </div>
     </div>
 
     <h1>Oficiais Orbitron</h1>
-    <div id="lista-membros"></div>
+    <div class="membros-grid" id="lista-membros"></div>
 
     <script>
-        // MENU LOGIC
+        // --- LÓGICA DO MENU (DESLIZAMENTO) ---
         const trigger = document.getElementById('menu-trigger');
         const menu = document.getElementById('drop-menu');
         const items = document.querySelectorAll('.menu-item');
         let isHolding = false;
-        trigger.addEventListener('mousedown', () => { isHolding = true; menu.style.display = 'block'; });
-        window.addEventListener('mouseup', () => {
+
+        const startMove = () => { isHolding = true; menu.style.display = 'block'; };
+        const endMove = () => {
             if(isHolding) {
                 const sel = document.querySelector('.menu-item.selected');
                 if(sel) window.location.href = sel.dataset.url;
                 menu.style.display = 'none'; isHolding = false;
             }
-        });
-        window.addEventListener('mousemove', (e) => {
+        };
+        const onMove = (e) => {
             if(!isHolding) return;
-            const target = document.elementFromPoint(e.clientX, e.clientY);
+            const pointer = e.touches ? e.touches[0] : e;
+            const target = document.elementFromPoint(pointer.clientX, pointer.clientY);
             items.forEach(i => i.classList.toggle('selected', i === target));
-        });
+        };
 
-        // ADMIN LOGIC
+        trigger.addEventListener('mousedown', startMove);
+        window.addEventListener('mouseup', endMove);
+        window.addEventListener('mousemove', onMove);
+        trigger.addEventListener('touchstart', (e) => { e.preventDefault(); startMove(); });
+        window.addEventListener('touchend', endMove);
+        window.addEventListener('touchmove', onMove);
+
+        // --- LÓGICA DO BANCO DE DADOS (FIREBASE) ---
         function gerarChave() {
-            const nick = document.getElementById('staff-nick').value;
-            if(!nick) return;
+            const nick = document.getElementById('staff-nick').value.trim();
+            if(!nick) return alert("Insira o nick do militar!");
+            
             const chave = "ORB-" + Math.random().toString(36).substr(2, 6).toUpperCase();
-            db.ref('logins_gerados/' + chave).set({ responsavel: nick, cargo: document.getElementById('staff-cargo').value });
-            document.getElementById('result-key').innerText = chave;
+            
+            db.ref('logins_gerados/' + chave).set({ 
+                responsavel: nick, 
+                cargo: document.getElementById('staff-cargo').value 
+            }).then(() => {
+                const res = document.getElementById('result-key');
+                res.innerText = chave;
+                res.style.display = 'block';
+            });
         }
 
         function buscar() {
             const k = document.getElementById('search-key').value.trim();
+            const res = document.getElementById('result-search');
             db.ref('logins_gerados/' + k).once('value', s => {
-                document.getElementById('result-search').innerText = s.val() ? "Membro: " + s.val().responsavel : "Não encontrado";
+                if(s.val()) {
+                    res.innerHTML = `Membro: ${s.val().responsavel} <br> Cargo: ${s.val().cargo.toUpperCase()}`;
+                    res.style.display = 'block';
+                } else {
+                    alert("Chave não encontrada.");
+                }
             });
         }
 
+        // Monitorar Membros em Tempo Real
         db.ref('usuarios').on('value', snap => {
-            const div = document.getElementById('lista-membros');
-            div.innerHTML = "";
+            const container = document.getElementById('lista-membros');
+            container.innerHTML = "";
             snap.forEach(m => {
                 const u = m.val();
-                div.innerHTML += `<div class="membro-card"><h4>${u.nome}</h4><p>${u.cargo}</p><h2>${(u.pontos || 0).toFixed(1)} PTS</h2></div>`;
+                container.innerHTML += `
+                    <div class="membro-card">
+                        <span class="badge badge-${u.cargo}">${u.cargo}</span>
+                        <h4>${u.nome}</h4>
+                        <div class="pts-display">${(u.pontos || 0).toFixed(1)} <small>PTS</small></div>
+                    </div>
+                `;
             });
         });
     </script>
