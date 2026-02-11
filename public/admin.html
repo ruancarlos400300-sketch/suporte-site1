@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CENTRAL DE COMANDO | EB</title>
+    <title>ORBITRON | CENTRAL DE COMANDO</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
@@ -11,113 +11,69 @@
     <script src="/firebase-config.js"></script>
 
     <style>
-        /* CSS DE ALTA DENSIDADE - ORBITRON DESIGN SYSTEM 
-           Focado em: Arredondamento informal, profundidade e contraste.
-        */
         :root {
-            --bg-deep: #1e1f22;      /* Fundo Discord */
-            --bg-card: #2b2d31;      /* Card Principal */
-            --bg-input: #111214;     /* Inputs */
-            --eb-ouro: #d4af37;      /* Dourado Militar */
-            --eb-ouro-glow: rgba(212, 175, 55, 0.3);
+            --bg-deep: #111214;
+            --bg-sidebar: #1e1f22;
+            --bg-card: #2b2d31;
+            --eb-ouro: #d4af37;
+            --eb-perigo: #f23f42;
             --success: #23a559;
-            --danger: #da373c;
             --text-main: #dbdee1;
-            --text-muted: #949ba4;
-            --radius-xl: 28px;       /* Bordas bem redondas e informais */
-            --radius-md: 18px;
-            --shadow: 0 12px 24px rgba(0,0,0,0.4);
-            --font-tactical: 'gg sans', 'Segoe UI', Tahoma, sans-serif;
+            --radius-informal: 25px;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-tactical); }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'gg sans', 'Segoe UI', sans-serif; }
 
         body {
             background-color: var(--bg-deep);
             color: var(--text-main);
             height: 100vh;
-            overflow: hidden;
             display: flex;
-            justify-content: center;
+            overflow: hidden;
         }
 
-        /* LAYOUT PRINCIPAL RESPONSIVO */
-        .app-container {
-            width: 100%;
-            max-width: 1000px;
-            height: 100vh;
-            display: grid;
-            grid-template-columns: 280px 1fr;
-            background: var(--bg-deep);
-        }
-
-        /* SIDEBAR (LISTA DE TRANSMISSÕES) */
+        /* SIDEBAR DE TRANSMISSÕES */
         .sidebar {
-            background: var(--bg-deep);
-            border-right: 1px solid rgba(255,255,255,0.03);
+            width: 320px;
+            background: var(--bg-sidebar);
             display: flex;
             flex-direction: column;
-            padding: 20px 15px;
+            border-right: 1px solid rgba(255,255,255,0.05);
         }
 
         .sidebar-header {
-            padding: 10px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
+            padding: 30px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
 
-        .status-badge {
-            width: 12px;
-            height: 12px;
-            background: var(--success);
-            border-radius: 50%;
-            box-shadow: 0 0 10px var(--success);
-        }
+        .sidebar-header h2 { font-size: 14px; color: var(--eb-ouro); text-transform: uppercase; letter-spacing: 2px; }
 
-        .sidebar-title {
-            font-size: 14px;
-            font-weight: 900;
-            color: #fff;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* LISTA DE TICKETS */
         .ticket-list {
             flex: 1;
             overflow-y: auto;
-            margin-top: 10px;
+            padding: 15px;
         }
 
+        /* CARD DE TICKET NA LISTA */
         .ticket-card {
             background: var(--bg-card);
-            padding: 18px;
-            border-radius: var(--radius-md);
-            margin-bottom: 12px;
+            padding: 15px;
+            border-radius: 18px;
+            margin-bottom: 10px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            border: 1px solid transparent;
+            transition: 0.3s;
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
+            border: 1px solid transparent;
         }
 
-        .ticket-card:hover {
-            background: #35373c;
-            transform: translateX(5px);
-        }
+        .ticket-card:hover { transform: translateX(5px); background: #35373c; }
+        .ticket-card.active { border-color: var(--eb-ouro); background: rgba(212, 175, 55, 0.05); }
 
-        .ticket-card.active {
-            border-color: var(--eb-ouro);
-            background: rgba(212, 175, 55, 0.05);
-            box-shadow: 0 0 15px var(--eb-ouro-glow);
-        }
-
-        .avatar-circle {
-            width: 45px;
-            height: 45px;
+        .avatar {
+            width: 40px; height: 40px;
             background: var(--eb-ouro);
             border-radius: 50%;
             display: flex;
@@ -125,180 +81,134 @@
             justify-content: center;
             color: #000;
             font-weight: 900;
-            font-size: 18px;
         }
 
-        /* ÁREA DE CHAT */
-        .chat-area {
+        /* ÁREA DE CHAT PRINCIPAL */
+        .main-content {
+            flex: 1;
             display: flex;
             flex-direction: column;
-            background: var(--bg-card);
-            border-radius: var(--radius-xl) 0 0 0;
-            box-shadow: -10px 0 30px rgba(0,0,0,0.2);
+            background: var(--bg-deep);
         }
 
         .chat-header {
-            padding: 25px 30px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding: 20px 30px;
+            background: var(--bg-sidebar);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
 
-        .chat-header h2 { font-size: 18px; color: #fff; }
-
-        .messages-container {
+        #chat-window {
             flex: 1;
             padding: 30px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 15px;
         }
 
-        /* MENSAGENS BALÃO REDONDO */
-        .msg-row { display: flex; flex-direction: column; max-width: 80%; }
-        .msg-row.staff { align-self: flex-end; align-items: flex-end; }
-        .msg-row.recruta { align-self: flex-start; align-items: flex-start; }
+        /* BALÕES DE MENSAGEM */
+        .msg { max-width: 70%; padding: 12px 18px; border-radius: 20px; font-size: 15px; }
+        .msg.staff { align-self: flex-end; background: var(--eb-ouro); color: #000; border-bottom-right-radius: 4px; font-weight: 600; }
+        .msg.recruta { align-self: flex-start; background: var(--bg-card); color: #fff; border-bottom-left-radius: 4px; }
 
-        .msg-bubble {
-            padding: 14px 20px;
-            border-radius: 22px;
-            font-size: 15px;
-            line-height: 1.4;
-            position: relative;
-        }
-
-        .staff .msg-bubble { background: var(--eb-ouro); color: #000; border-bottom-right-radius: 4px; font-weight: 500; }
-        .recruta .msg-bubble { background: var(--bg-input); color: #fff; border-bottom-left-radius: 4px; border: 1px solid rgba(255,255,255,0.05); }
-
-        .msg-info { font-size: 10px; color: var(--text-muted); margin-top: 5px; text-transform: uppercase; font-weight: bold; }
-
-        /* INPUT DE TEXTO */
-        .input-box {
+        /* RODAPÉ DE INPUT */
+        .chat-footer {
             padding: 20px 30px;
-            background: var(--bg-card);
+            background: var(--bg-sidebar);
+            display: flex;
+            gap: 15px;
         }
 
         .input-wrapper {
-            background: var(--bg-input);
-            padding: 5px 10px;
-            border-radius: 18px;
+            flex: 1;
+            background: var(--bg-deep);
+            border-radius: 20px;
+            padding: 5px 15px;
             display: flex;
             align-items: center;
-            gap: 10px;
         }
 
         .input-wrapper input {
             flex: 1;
             background: transparent;
             border: none;
-            padding: 12px;
+            padding: 10px;
             color: #fff;
             outline: none;
-            font-size: 15px;
         }
 
-        .send-btn {
+        .btn-action {
             background: var(--eb-ouro);
             border: none;
-            width: 40px;
-            height: 40px;
+            width: 45px; height: 45px;
             border-radius: 50%;
             cursor: pointer;
-            transition: 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #000;
+            transition: 0.3s;
         }
 
-        .send-btn:hover { transform: scale(1.1) rotate(-10deg); }
+        .btn-finish {
+            background: var(--eb-perigo);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
 
-        /* RESPONSIVIDADE MOBILE (FOTO DO USUÁRIO) */
+        /* RESPONSIVIDADE MOBILE */
         @media (max-width: 768px) {
-            .app-container { grid-template-columns: 1fr; }
-            .sidebar { display: none; } /* Oculta sidebar no mobile para focar no chat */
-            .chat-area { border-radius: 0; }
+            .sidebar { width: 80px; }
+            .sidebar-header h2, .ticket-card div:last-child { display: none; }
+            .ticket-card { justify-content: center; padding: 10px; }
         }
-
-        /* ANIMAÇÃO DE CARREGAMENTO */
-        .loading-pulse { animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <div class="app-container">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="status-badge"></div>
-                <span class="sidebar-title">Transmissões Ativas</span>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2>Transmissões</h2>
+        </div>
+        <div class="ticket-list" id="ticket-list">
             </div>
-            
-            <div class="ticket-list" id="ticket-list">
-                <div class="loading-pulse" style="text-align: center; padding: 20px; font-size: 11px; color: var(--text-muted);">
-                    SINCRONIZANDO DATABASE...
+    </aside>
+
+    <main class="main-content">
+        <header class="chat-header">
+            <div id="active-user-info" style="display: flex; align-items: center; gap: 15px;">
+                <div class="avatar" id="header-avatar">?</div>
+                <div>
+                    <h3 id="header-name">Aguardando...</h3>
+                    <span style="font-size: 10px; color: var(--success); font-weight: 800;">CANAL CRIPTOGRAFADO</span>
                 </div>
             </div>
+            <button class="btn-finish" onclick="App.finalizar()">FINALIZAR</button>
+        </header>
 
-            <div style="margin-top: auto; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 20px;">
-                <div style="color: var(--eb-ouro); font-weight: 900; font-size: 13px;" id="op-nome">CARREGANDO...</div>
-                <div style="color: var(--text-muted); font-size: 10px;" id="op-cargo">OFICIAL DE DIA</div>
+        <div id="chat-window">
             </div>
-        </aside>
 
-        <main class="chat-area">
-            <header class="chat-header">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <div class="avatar-circle" id="target-avatar">?</div>
-                    <div>
-                        <div id="target-name" style="font-weight: 800; color: #fff;">Aguardando Seleção</div>
-                        <div style="font-size: 10px; color: var(--success); font-weight: bold;">CANAL CRIPTOGRAFADO</div>
-                    </div>
-                </div>
-                
-                <button onclick="System.finalizar()" class="send-btn" style="background: var(--danger); color: #fff; width: auto; padding: 0 15px; border-radius: 12px; height: 35px; font-size: 11px; font-weight: 900;">
-                    FINALIZAR
-                </button>
-            </header>
-
-            <div class="messages-container" id="chat-box">
-                </div>
-
-            <div class="input-box">
-                <div class="input-wrapper">
-                    <input type="text" id="msg-input" placeholder="Enviar instrução para o recruta...">
-                    <button class="send-btn" onclick="System.enviar()">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
-                </div>
+        <div class="chat-footer">
+            <div class="input-wrapper">
+                <input type="text" id="msg-input" placeholder="Enviar mensagem tática...">
             </div>
-        </main>
-    </div>
+            <button class="btn-action" onclick="App.enviar()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </main>
 
     <script>
-        /**
-         * ENGINE TÁTICA v6.2
-         * Gerenciamento de 500+ linhas de fluxo de dados
-         */
-        const System = {
+        const App = {
             ticketAtivo: null,
-            dadosMilitar: null,
+            nomeStaff: localStorage.getItem('militar_nome') || "Oficial",
 
-            init: async () => {
-                const chave = localStorage.getItem('militar_chave');
-                if(!chave) return window.location.href = '/login';
-
-                // Carregar perfil
-                const snap = await db.ref(`logins_gerados/${chave}`).once('value');
-                System.dadosMilitar = snap.val();
-                if(!System.dadosMilitar) return window.location.href = '/login';
-
-                document.getElementById('op-nome').innerText = System.dadosMilitar.responsavel.toUpperCase();
-                document.getElementById('op-cargo').innerText = System.dadosMilitar.cargo.toUpperCase();
-
-                System.ouvirTickets();
+            init: () => {
+                App.ouvirTickets();
             },
 
             ouvirTickets: () => {
@@ -306,60 +216,60 @@
                     const list = document.getElementById('ticket-list');
                     list.innerHTML = "";
                     
+                    if(!snap.exists()) return;
+
                     snap.forEach(child => {
                         const t = child.val();
                         if(t.status !== 'aberto') return;
 
                         const div = document.createElement('div');
-                        div.className = `ticket-card ${System.ticketAtivo === child.key ? 'active' : ''}`;
+                        div.className = `ticket-card ${App.ticketAtivo === child.key ? 'active' : ''}`;
                         div.innerHTML = `
-                            <div class="avatar-circle">${t.nome_usuario.charAt(0)}</div>
-                            <div>
-                                <div style="font-weight:bold; color:#fff; font-size:14px;">${t.nome_usuario}</div>
-                                <div style="font-size:10px; color:var(--text-muted);">${t.tipo || 'Alistamento'}</div>
+                            <div class="avatar">${t.nome_usuario.charAt(0)}</div>
+                            <div style="flex:1">
+                                <div style="font-weight:bold; font-size:14px;">${t.nome_usuario}</div>
+                                <div style="font-size:10px; opacity:0.6;">${t.tipo}</div>
                             </div>
                         `;
-                        div.onclick = () => System.selecionar(child.key, t.nome_usuario);
-                        list.appendChild(div);
+                        div.onclick = () => App.selecionar(child.key, t.nome_usuario);
+                        list.prepend(div);
                     });
                 });
             },
 
             selecionar: (id, nome) => {
-                System.ticketAtivo = id;
-                document.getElementById('target-name').innerText = nome;
-                document.getElementById('target-avatar').innerText = nome.charAt(0);
-                
-                // Recarregar mensagens
-                System.ouvirMensagens(id);
+                App.ticketAtivo = id;
+                document.getElementById('header-name').innerText = nome;
+                document.getElementById('header-avatar').innerText = nome.charAt(0);
+                App.ouvirMensagens(id);
             },
 
             ouvirMensagens: (id) => {
                 db.ref(`mensagens/${id}`).on('value', snap => {
-                    const box = document.getElementById('chat-box');
-                    box.innerHTML = "";
+                    const win = document.getElementById('chat-window');
+                    win.innerHTML = "";
                     
                     snap.forEach(child => {
                         const m = child.val();
                         const isStaff = m.tipo === 'staff';
                         
-                        box.innerHTML += `
-                            <div class="msg-row ${isStaff ? 'staff' : 'recruta'}">
-                                <div class="msg-bubble">${m.texto}</div>
-                                <div class="msg-info">${m.autor} • ${new Date(m.timestamp).toLocaleTimeString([], {hour: '2s-digit', minute:'2-digit'})}</div>
+                        win.innerHTML += `
+                            <div class="msg ${isStaff ? 'staff' : 'recruta'}">
+                                ${m.texto}
+                                <div style="font-size:9px; opacity:0.5; margin-top:5px;">${m.autor}</div>
                             </div>
                         `;
                     });
-                    box.scrollTop = box.scrollHeight;
+                    win.scrollTop = win.scrollHeight;
                 });
             },
 
             enviar: () => {
                 const input = document.getElementById('msg-input');
-                if(!input.value.trim() || !System.ticketAtivo) return;
+                if(!input.value.trim() || !App.ticketAtivo) return;
 
-                db.ref(`mensagens/${System.ticketAtivo}`).push({
-                    autor: System.dadosMilitar.responsavel,
+                db.ref(`mensagens/${App.ticketAtivo}`).push({
+                    autor: App.nomeStaff,
                     texto: input.value,
                     tipo: 'staff',
                     timestamp: Date.now()
@@ -368,17 +278,18 @@
             },
 
             finalizar: async () => {
-                if(!System.ticketAtivo) return;
-                if(confirm("Deseja arquivar esta transmissão?")){
-                    await db.ref(`tickets/${System.ticketAtivo}`).update({ status: 'fechado' });
-                    System.ticketAtivo = null;
+                if(!App.ticketAtivo) return;
+                if(confirm("Deseja encerrar este atendimento?")){
+                    await db.ref(`tickets/${App.ticketAtivo}`).update({ status: 'fechado' });
                     location.reload();
                 }
             }
         };
 
-        window.onload = System.init;
-        document.getElementById('msg-input').onkeypress = (e) => { if(e.key === 'Enter') System.enviar(); };
+        window.onload = App.init;
+        document.getElementById('msg-input').addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') App.enviar();
+        });
     </script>
 </body>
 </html>
