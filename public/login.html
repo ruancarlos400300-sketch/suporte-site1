@@ -1,57 +1,55 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LOGIN STAFF | ORBITRON</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LOGIN | ORBITRON EB</title>
+    <link rel="stylesheet" href="/styles.css">
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <script src="/firebase-config.js"></script>
-    <style>
-        :root { --bg: #313338; --card: #2b2d31; --blue: #5865F2; }
-        * { margin:0; padding:0; box-sizing:border-box; font-family: 'gg sans', sans-serif; }
-        body { background: var(--bg); color: white; display: flex; align-items: center; justify-content: center; height: 100vh; }
-        .login-card { background: var(--card); padding: 40px; border-radius: 20px; width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: fadeIn 0.5s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        h2 { margin-bottom: 10px; }
-        p { color: #b5bac1; margin-bottom: 25px; font-size: 14px; }
-        input { width: 100%; padding: 15px; background: #1e1f22; border: 1px solid #3f4147; border-radius: 10px; color: white; text-align: center; letter-spacing: 2px; font-weight: bold; outline: none; margin-bottom: 20px; }
-        button { width: 100%; padding: 15px; background: var(--blue); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        button:hover { background: #4752c4; transform: scale(1.02); }
-        .back { display: block; margin-top: 20px; color: #00a8fc; text-decoration: none; font-size: 13px; }
-    </style>
+    <script src="/logs.js"></script>
 </head>
 <body>
-    <div class="login-card">
-        <h2>Acesso Militar</h2>
-        <p>Insira sua chave de acesso gerada pelo Comando.</p>
-        <input type="text" id="access-key" placeholder="ORB-XXXXXXXX">
-        <button onclick="autenticar()">AUTENTICAR</button>
-        <a href="/" class="back">Voltar ao Suporte</a>
+
+    <div class="card-militar">
+        <img src="https://i.imgur.com/8Y6E7Gv.png" width="70" style="margin-bottom: 20px;">
+        <h1>Identificação Militar</h1>
+        <p>Acesse o painel tático com sua chave de serviço.</p>
+
+        <div class="input-group">
+            <label>Chave de Acesso</label>
+            <input type="text" id="access-key" placeholder="ORB-XXXX-XXXX-XXXX-XXXX" style="text-align: center; font-family: monospace;">
+        </div>
+
+        <button class="btn-eb" onclick="autenticar()">AUTENTICAR NO QG</button>
+
+        <div style="margin-top: 25px;">
+            <a href="/" style="color: var(--eb-ouro); text-decoration: none; font-size: 13px; font-weight: bold;">← VOLTAR AO POSTO DE ATENDIMENTO</a>
+        </div>
     </div>
 
     <script>
         function autenticar() {
             const chave = document.getElementById('access-key').value.trim().toUpperCase();
-            if(!chave) return alert("Insira a chave!");
+            if(!chave) return;
 
             db.ref('logins_gerados/' + chave).once('value', snap => {
-                const dados = snap.val();
-                if(dados) {
-                    db.ref('usuarios/' + chave).update({
-                        nome: dados.responsavel,
-                        cargo: dados.cargo
-                    }).then(() => {
+                const d = snap.val();
+                if(d) {
+                    db.ref('usuarios/' + chave).update({ nome: d.responsavel, cargo: d.cargo }).then(() => {
                         localStorage.setItem('militar_chave', chave);
-                        window.location.href = (dados.cargo === 'dono') ? '/dono' : '/admin';
+                        enviarLog("🚀 MILITAR ONLINE", [
+                            { name: "Soldado", value: d.responsavel, inline: true },
+                            { name: "Patente", value: d.cargo.toUpperCase(), inline: true }
+                        ], 3447003);
+                        window.location.href = (d.cargo === 'dono') ? '/dono' : '/admin';
                     });
-                } else { alert("Chave inválida ou inexistente!"); }
+                } else {
+                    alert("ACESSO NEGADO: Chave não reconhecida pelo Alto Comando.");
+                }
             });
         }
     </script>
 </body>
 </html>
-
-
