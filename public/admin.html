@@ -2,93 +2,106 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>CENTRAL CAC | STAFF</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STAFF | ORBITRON</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <script src="/firebase-config.js"></script>
     <style>
-        body { background: #313338; color: white; font-family: sans-serif; display: flex; height: 100vh; margin: 0; }
-        aside { width: 280px; background: #2b2d31; padding: 20px; border-right: 2px solid #1e1f22; }
+        :root { --bg: #313338; --side: #2b2d31; --blue: #5865F2; --green: #23a559; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: sans-serif; }
+        body { background: var(--bg); color: white; display: flex; height: 100vh; overflow: hidden; }
+        
+        aside { width: 280px; background: var(--side); padding: 20px; border-right: 1px solid #1e1f22; display: flex; flex-direction: column; }
+        .perfil { background: #232428; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid var(--blue); }
+        #ticket-list { flex: 1; overflow-y: auto; }
+        .ticket-card { background: #1e1f22; padding: 15px; border-radius: 10px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; border: 1px solid transparent; }
+        .ticket-card:hover { border-color: var(--blue); transform: translateX(5px); }
+
         main { flex: 1; display: flex; flex-direction: column; }
-        .card { background: #232428; border-radius: 12px; padding: 15px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
-        .card:hover { transform: translateX(5px); background: #35373c; }
-        #chat { flex: 1; padding: 30px; overflow-y: auto; }
-        .input-box { padding: 20px; background: #2b2d31; border-top: 1px solid #1e1f22; display: flex; gap: 10px; }
+        #chat { flex: 1; padding: 30px; overflow-y: auto; background: var(--bg); }
+        .input-area { padding: 20px; background: var(--side); display: flex; gap: 10px; }
         input { flex: 1; background: #383a40; border: none; padding: 15px; border-radius: 8px; color: white; outline: none; }
-        .status-bar { padding: 15px; background: #232428; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #5865f2; }
+        
+        .msg-staff { text-align: right; margin-bottom: 12px; }
+        .msg-staff span { background: var(--blue); padding: 10px 15px; border-radius: 15px 15px 2px 15px; display: inline-block; }
+        .msg-player { text-align: left; margin-bottom: 12px; }
+        .msg-player span { background: #383a40; padding: 10px 15px; border-radius: 15px 15px 15px 2px; display: inline-block; }
     </style>
 </head>
 <body>
     <aside>
-        <div class="status-bar">
-            <h4 id="my-name">...</h4>
-            <p style="font-size: 12px; color: #23a559;">PONTOS: <span id="my-pts">0</span></p>
+        <div class="perfil">
+            <h4 id="nome-militar">Carregando...</h4>
+            <p style="font-size: 12px; color: var(--green);">PONTOS: <span id="pts-militar">0.0</span></p>
         </div>
         <div id="ticket-list"></div>
     </aside>
+
     <main>
-        <div id="chat"></div>
-        <div class="input-box">
-            <input type="text" id="staff-input" placeholder="Digite /concluir para finalizar ou /off para sair...">
+        <div id="chat"><h3>Selecione um atendimento na lateral</h3></div>
+        <div class="input-area">
+            <input type="text" id="main-input" placeholder="Comandos: /concluir ou /off">
         </div>
     </main>
 
     <script>
-        let activeTicket = null;
-        let myUID = null;
+        const minhaChave = localStorage.getItem('militar_chave');
+        let ticketAtivo = null;
 
-        auth.onAuthStateChanged(user => {
-            if(user) {
-                myUID = user.uid;
-                db.ref('usuarios/' + user.uid).on('value', snap => {
-                    const d = snap.val();
-                    document.getElementById('my-name').innerText = d.nome;
-                    document.getElementById('my-pts').innerText = d.pontos.toFixed(1);
-                });
-            } else { window.location.href = '/login'; }
+        if(!minhaChave) window.location.href = '/login';
+
+        // Carregar Perfil
+        db.ref('usuarios/' + minhaChave).on('value', snap => {
+            const d = snap.val();
+            if(!d) window.location.href = '/login';
+            document.getElementById('nome-militar').innerText = d.nome;
+            document.getElementById('pts-militar').innerText = (d.pontos || 0).toFixed(1);
         });
 
+        // Lista de Tickets
         db.ref('tickets').on('value', snap => {
             const list = document.getElementById('ticket-list');
             list.innerHTML = "";
             snap.forEach(t => {
                 if(t.val().status === 'aberto') {
                     const div = document.createElement('div');
-                    div.className = 'card';
-                    div.innerHTML = `<b>${t.val().nick}</b><br><small>Aguardando...</small>`;
-                    div.onclick = () => selectTicket(t.key, t.val().nick);
+                    div.className = 'ticket-card';
+                    div.innerHTML = `<strong>${t.val().nick}</strong><br><small>Aguardando...</small>`;
+                    div.onclick = () => carregarChat(t.key, t.val().nick);
                     list.appendChild(div);
                 }
             });
         });
 
-        function selectTicket(id, nick) {
-            activeTicket = id;
-            document.getElementById('chat').innerHTML = `<h3>Atendendo: ${nick}</h3><hr style="opacity:0.1;margin:10px 0;">`;
+        function carregarChat(id, nick) {
+            ticketAtivo = id;
+            const chat = document.getElementById('chat');
+            chat.innerHTML = `<h2 style="margin-bottom:20px;">Atendimento: ${nick}</h2>`;
+            db.ref('tickets/' + id + '/mensagens').off();
             db.ref('tickets/' + id + '/mensagens').on('child_added', snap => {
                 const m = snap.val();
-                const p = document.createElement('div');
-                p.style.textAlign = m.autor === 'staff' ? 'right' : 'left';
-                p.innerHTML = `<span style="display:inline-block;padding:8px 12px;border-radius:12px;background:${m.autor==='staff'?'#5865f2':'#383a40'};margin:4px;">${m.texto}</span>`;
-                document.getElementById('chat').appendChild(p);
-                document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+                const div = document.createElement('div');
+                div.className = m.autor === 'staff' ? 'msg-staff' : 'msg-player';
+                div.innerHTML = `<span>${m.texto}</span>`;
+                chat.appendChild(div);
+                chat.scrollTop = chat.scrollHeight;
             });
         }
 
-        document.getElementById('staff-input').addEventListener('keypress', e => {
+        document.getElementById('main-input').addEventListener('keypress', e => {
             if(e.key === 'Enter') {
-                const val = e.target.value.toLowerCase();
-                if(val === '/concluir') {
-                    if(!activeTicket) return;
-                    db.ref('tickets/' + activeTicket).update({ status: 'avaliando', atendidoPor: myUID });
-                    activeTicket = null;
+                const cmd = e.target.value.toLowerCase();
+                if(cmd === '/concluir' && ticketAtivo) {
+                    db.ref('tickets/' + ticketAtivo).update({ status: 'avaliando', atendidoPor: minhaChave });
+                    ticketAtivo = null;
                     document.getElementById('chat').innerHTML = "<h1>Ticket enviado para avaliação.</h1>";
-                } else if(val === '/off') {
-                    if(activeTicket) return alert("Conclua o ticket antes de sair!");
-                    auth.signOut();
-                } else if(activeTicket) {
-                    db.ref('tickets/' + activeTicket + '/mensagens').push({ autor: 'staff', texto: e.target.value });
+                } else if(cmd === '/off') {
+                    if(ticketAtivo) return alert("Conclua o ticket antes de sair!");
+                    localStorage.removeItem('militar_chave');
+                    window.location.href = '/login';
+                } else if(ticketAtivo) {
+                    db.ref('tickets/' + ticketAtivo + '/mensagens').push({ autor: 'staff', texto: e.target.value });
                 }
                 e.target.value = "";
             }
