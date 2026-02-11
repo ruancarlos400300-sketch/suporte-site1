@@ -1,104 +1,452 @@
-/* PALETA DE CORES: DISCORD + EXÉRCITO BRASILEIRO */
+/* SISTEMA ORBITRON - EXÉRCITO BRASILEIRO (ROBLOX)
+    INTERFACE TÁTICA AVANÇADA v4.0
+    ESTÉTICA: DISCORD DARK + MILITAR MODERN
+*/
+
+/* --- 1. CONFIGURAÇÕES GERAIS E VARIÁVEIS (RECORTE) --- */
 :root {
-    --bg-discord: #313338;
-    --bg-sidebar: #2b2d31;
+    /* Cores Discord */
+    --bg-discord-dark: #1e1f22;
+    --bg-discord-main: #313338;
+    --bg-discord-card: #2b2d31;
     --bg-input: #1e1f22;
-    --eb-verde: #3a4d2c; /* Verde Oliva */
-    --eb-verde-claro: #5b7a44;
-    --eb-ouro: #c5a059; /* Cor de Patente */
-    --text-primary: #dbdee1;
-    --text-muted: #b5bac1;
-    --danger: #ed4245;
-    --success: #23a559;
+    
+    /* Cores EB Tático */
+    --eb-verde-oliva: #3a4d2c;
+    --eb-verde-neon: #7a8e5a;
+    --eb-ouro: #d4af37;
+    --eb-ouro-glow: rgba(212, 175, 55, 0.4);
+    --eb-perigo: #ed4245;
+    --eb-sucesso: #23a559;
+    
+    /* Fontes e Sombras */
+    --font-primary: 'gg sans', 'Segoe UI', Tahoma, sans-serif;
+    --shadow-heavy: 0 10px 40px rgba(0,0,0,0.6);
+    --shadow-glow: 0 0 15px var(--eb-ouro-glow);
+    --transition-fast: 0.2s ease;
+    --transition-smooth: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'gg sans', 'Segoe UI', Tahoma, sans-serif; }
+/* --- 2. RESET E CORE --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: var(--font-primary);
+    -webkit-tap-highlight-color: transparent;
+}
 
 body {
-    background-color: var(--bg-discord);
-    color: var(--text-primary);
+    background-color: var(--bg-discord-dark);
+    background-image: 
+        radial-gradient(circle at 50% 50%, rgba(58, 77, 44, 0.15) 0%, transparent 70%),
+        url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+    color: #f2f3f5;
+    height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
-    background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://i.imgur.com/8mX97fS.png'); /* Opcional: Textura camuflada sutil */
-    background-size: cover;
+    overflow: hidden;
+    perspective: 1000px;
 }
 
-/* CONTAINER ESTILO DISCORD COM TOQUE MILITAR */
+/* --- 3. ANIMAÇÕES (KEYFRAMES) --- */
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes glowPulse {
+    0% { box-shadow: 0 0 5px var(--eb-ouro-glow); }
+    50% { box-shadow: 0 0 20px var(--eb-ouro-glow); }
+    100% { box-shadow: 0 0 5px var(--eb-ouro-glow); }
+}
+
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+}
+
+@keyframes scanline {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+}
+
+/* --- 4. CONTAINER PRINCIPAL (IDENTIFICAÇÃO MILITAR) --- */
 .card-militar {
-    background: var(--bg-sidebar);
-    border-radius: 8px;
+    background: var(--bg-discord-card);
     width: 100%;
-    max-width: 480px;
-    padding: 32px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-    border-top: 4px solid var(--eb-verde);
+    max-width: 440px;
+    padding: 45px 35px;
+    border-radius: 35px; /* Visual Redondo e Informal como solicitado */
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    box-shadow: var(--shadow-heavy);
     text-align: center;
+    position: relative;
+    animation: slideUp var(--transition-smooth);
 }
 
-h1, h2 {
+/* Scanline tática de fundo (detalhe informal) */
+.card-militar::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(rgba(212, 175, 55, 0.02) 50%, transparent 50%);
+    background-size: 100% 4px;
+    pointer-events: none;
+    border-radius: 35px;
+}
+
+/* --- 5. LOGOTIPO E ICONOGRAFIA --- */
+.logo-container {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 25px;
+    position: relative;
+    animation: float 4s ease-in-out infinite;
+}
+
+.logo-eb {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 0 8px var(--eb-ouro-glow));
+}
+
+/* --- 6. TIPOGRAFIA --- */
+h1 {
+    font-size: 26px;
+    font-weight: 800;
     color: white;
-    font-size: 24px;
     margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: -0.5px;
+}
+
+h2 {
+    font-size: 18px;
+    color: var(--eb-ouro);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.subtitle {
+    font-size: 14px;
+    color: #b5bac1;
+    margin-bottom: 30px;
+    line-height: 1.5;
+}
+
+/* --- 7. INPUTS E FORMULÁRIOS --- */
+.input-wrapper {
+    position: relative;
+    margin-bottom: 25px;
+}
+
+.input-label {
+    display: block;
+    text-align: left;
+    color: #b5bac1;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    padding-left: 10px;
+}
+
+input[type="text"], 
+input[type="password"],
+select {
+    width: 100%;
+    background: var(--bg-input);
+    border: 2px solid transparent;
+    border-radius: 18px; /* Redondo Informal */
+    padding: 16px;
+    color: white;
+    font-size: 16px;
+    transition: var(--transition-fast);
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+input:focus {
+    border-color: var(--eb-ouro);
+    background: #111214;
+    outline: none;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
+}
+
+input::placeholder {
+    color: #4e5058;
+    letter-spacing: normal;
+}
+
+/* --- 8. BOTÕES (AÇÃO TÁTICA) --- */
+.btn-eb {
+    width: 100%;
+    background: linear-gradient(135deg, var(--eb-verde-oliva), var(--eb-verde-neon));
+    color: white;
+    border: none;
+    padding: 18px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.btn-eb:hover {
+    transform: translateY(-3px) scale(1.02);
+    filter: brightness(1.1);
+    box-shadow: 0 8px 25px rgba(58, 77, 44, 0.4);
+}
+
+.btn-eb:active {
+    transform: translateY(1px);
+}
+
+/* Efeito de brilho ao passar o mouse */
+.btn-eb::before {
+    content: "";
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: 0.5s;
+}
+
+.btn-eb:hover::before {
+    left: 100%;
+}
+
+/* --- 9. BARRA LATERAL (ESTILO DISCORD) --- */
+.sidebar {
+    width: 280px;
+    background: var(--bg-discord-dark);
+    height: 100vh;
+    border-right: 1px solid rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    padding: 15px;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.2);
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.channel-item {
+    padding: 8px 12px;
+    margin: 2px 8px;
+    border-radius: 4px;
+    color: #949ba4;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: 0.1s;
+}
+
+.channel-item:hover {
+    background: rgba(78, 80, 88, 0.3);
+    color: #dbdee1;
+}
+
+.channel-item.active {
+    background: rgba(78, 80, 88, 0.6);
+    color: white;
+}
+
+/* --- 10. ELEMENTOS DE STATUS E BADGES --- */
+.badge-militar {
+    background: var(--eb-ouro);
+    color: #000;
+    font-size: 9px;
+    font-weight: 900;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    vertical-align: middle;
+}
+
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.online { background: var(--eb-sucesso); box-shadow: 0 0 5px var(--eb-sucesso); }
+.offline { background: #80848e; }
+
+/* --- 11. GRID DE FERRAMENTAS (DONO/ADMIN) --- */
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    width: 100%;
+    max-width: 1100px;
+    padding: 40px;
+}
+
+.tool-card {
+    background: var(--bg-discord-card);
+    border-radius: 25px;
+    padding: 30px;
+    border: 1px solid rgba(255,255,255,0.05);
+    transition: var(--transition-smooth);
+}
+
+.tool-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--eb-ouro-glow);
+}
+
+/* --- 12. LISTA DE MEMBROS TÁTICA --- */
+.membro-row {
+    background: rgba(0,0,0,0.2);
+    padding: 15px 20px;
+    border-radius: 15px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid transparent;
+    transition: 0.3s;
+}
+
+.membro-row:hover {
+    border-color: var(--eb-verde-oliva);
+    background: rgba(0,0,0,0.4);
+}
+
+.pts-tag {
+    color: var(--eb-verde-neon);
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+/* --- 13. CHAT E MENSAGENS --- */
+.chat-container {
+    flex: 1;
+    background: var(--bg-discord-main);
+    display: flex;
+    flex-direction: column;
+}
+
+.message {
+    padding: 15px 25px;
+    display: flex;
+    gap: 15px;
+    transition: 0.2s;
+}
+
+.message:hover {
+    background: rgba(0,0,0,0.05);
+}
+
+.avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: var(--eb-verde-oliva);
+    flex-shrink: 0;
+    border: 2px solid rgba(212, 175, 55, 0.2);
+}
+
+/* --- 14. CUSTOM SCROLLBAR (ESTILO DISCORD) --- */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-discord-dark);
+}
+
+::-webkit-scrollbar-thumb {
+    background: #1a1b1e;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #000;
+}
+
+/* --- 15. RECORTE E RESPONSIVIDADE (MEDIA QUERIES) --- */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+        align-items: flex-start;
+    }
+
+    .card-militar {
+        max-width: 100%;
+        margin-top: 20px;
+        padding: 35px 20px;
+        border-radius: 25px;
+    }
+
+    h1 { font-size: 22px; }
+    
+    .grid-container {
+        padding: 15px;
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar {
+        display: none; /* Esconde em telas pequenas para priorizar o conteúdo */
+    }
+}
+
+/* --- 16. EFEITOS DE ESTADO (LOADING E SUCESSO) --- */
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+    margin-right: 10px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* --- 17. LINKS E UTILITÁRIOS --- */
+.link-militar {
+    color: var(--eb-ouro);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    transition: 0.2s;
+    opacity: 0.7;
+}
+
+.link-militar:hover {
+    opacity: 1;
+    text-decoration: underline;
+}
+
+/* --- 18. RODAPÉ DE SEGURANÇA --- */
+.footer-security {
+    margin-top: 30px;
+    font-size: 10px;
+    color: #4e5058;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
 
-p { color: var(--text-muted); font-size: 15px; margin-bottom: 20px; }
-
-/* INPUTS ESTILO DISCORD */
-.input-group { text-align: left; margin-bottom: 20px; }
-label { display: block; color: var(--text-muted); font-size: 12px; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; }
-
-input, select {
-    width: 100%;
-    background: var(--bg-input);
-    border: none;
-    padding: 12px;
-    color: white;
-    border-radius: 4px;
-    font-size: 16px;
-    outline: none;
-}
-
-input:focus { box-shadow: 0 0 0 2px var(--eb-verde); }
-
-/* BOTÕES */
-.btn-eb {
-    width: 100%;
-    padding: 12px;
-    background-color: var(--eb-verde);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-weight: 500;
-    font-size: 16px;
-    cursor: pointer;
-    transition: 0.2s;
-    text-transform: uppercase;
-}
-
-.btn-eb:hover { background-color: var(--eb-verde-claro); }
-
-/* SISTEMA DE RECORTE (MOBILE) */
-@media (max-width: 768px) {
-    body { padding: 0; align-items: flex-start; }
-    .card-militar {
-        max-width: 100%;
-        height: 100vh;
-        border-radius: 0;
-        padding: 40px 20px;
-    }
-}
-
-/* BADGES DE PATENTE */
-.badge {
-    background: var(--eb-ouro);
-    color: black;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-weight: bold;
-    font-size: 10px;
-    text-transform: uppercase;
-}
+/* FIM DO CSS MILITAR TÁTICO */
