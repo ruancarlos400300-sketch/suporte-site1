@@ -3,327 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="author" content="Orbitron EB">
-    <meta name="description" content="Portal de acesso restrito ao Estado-Maior">
+    <title>LOGIN MILITAR | EB</title>
     
-    <title>SISTEMA TÁTICO | AUTENTICAÇÃO DE SEGURANÇA</title>
-
-    <link rel="stylesheet" href="/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
-    
+    <script src="/firebase-config.js"></script>
+
     <style>
-        /* EXPANSÃO TÉCNICA DE CSS INTERNO (ESTILIZAÇÃO DE TRANSIÇÃO) 
-           Focado no visual "Redondo, Informal e Profissional"
-        */
+        /* CSS GLOBAL SINCRONIZADO - PADRÃO DARK DISCORD */
         :root {
-            --auth-glow: rgba(212, 175, 55, 0.15);
-            --auth-bg-gradient: linear-gradient(135deg, #1e1f22 0%, #0b0c0d 100%);
-            --transition-smooth: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            --bg-deep: #1e1f22;
+            --bg-card: #2b2d31;
+            --eb-ouro: #d4af37;
+            --radius-informal: 35px;
+            --text-main: #dbdee1;
         }
 
         body {
-            background: var(--auth-bg-gradient);
-            min-height: 100vh;
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'gg sans', sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
-            position: relative;
-        }
-
-        /* EFEITOS DE FUNDO TÁTICOS (DECORATIVOS) */
-        .overlay-grid {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-image: radial-gradient(rgba(212, 175, 55, 0.05) 1px, transparent 1px);
-            background-size: 30px 30px;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        .auth-wrapper {
-            z-index: 10;
-            width: 100%;
-            max-width: 440px;
+            height: 100vh;
+            margin: 0;
             padding: 20px;
-            animation: fadeInPage 0.8s ease-out;
         }
 
-        /* CARD DE ACESSO (GLASSMORPHISM AVANÇADO) */
-        .card-militar-auth {
-            background: rgba(43, 45, 49, 0.8);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border-radius: 45px; /* Visual Redondo Informal */
-            border: 2px solid rgba(212, 175, 55, 0.2);
+        /* CARD REDONDO E PROFISSIONAL */
+        .login-card {
+            background: var(--bg-card);
             padding: 50px 40px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-            text-align: center;
-            transition: var(--transition-smooth);
-        }
-
-        .card-militar-auth:hover {
-            border-color: rgba(212, 175, 55, 0.5);
-            transform: scale(1.01);
-            box-shadow: 0 30px 60px rgba(212, 175, 55, 0.05);
-        }
-
-        .brand-logo {
-            width: 90px;
-            margin-bottom: 25px;
-            filter: drop-shadow(0 0 10px var(--auth-glow));
-            animation: logoFloat 4s ease-in-out infinite;
-        }
-
-        /* TIPOGRAFIA PROFISSIONAL */
-        .auth-title {
-            color: #fff;
-            font-size: 26px;
-            font-weight: 800;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: -0.5px;
-        }
-
-        .auth-desc {
-            color: #b5bac1;
-            font-size: 14px;
-            line-height: 1.6;
-            margin-bottom: 35px;
-        }
-
-        /* INPUTS TÁTICOS */
-        .field-container {
-            position: relative;
-            margin-bottom: 25px;
-        }
-
-        .field-label {
-            display: block;
-            text-align: left;
-            font-size: 11px;
-            font-weight: 900;
-            color: var(--eb-ouro);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            padding-left: 20px;
-        }
-
-        .militar-input {
+            border-radius: var(--radius-informal);
             width: 100%;
-            background: #1e1f22;
-            border: 2px solid #3f4147;
+            max-width: 420px;
+            text-align: center;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.05);
+            animation: fadeIn 0.8s ease;
+        }
+
+        .eb-brand { width: 85px; margin-bottom: 25px; }
+
+        .title { font-size: 22px; font-weight: 900; color: #fff; margin-bottom: 10px; }
+        .subtitle { font-size: 13px; color: var(--eb-ouro); font-weight: bold; text-transform: uppercase; margin-bottom: 35px; }
+
+        /* INPUTS ESTILIZADOS */
+        .input-box {
+            background: #111214;
+            border: 2px solid transparent;
             border-radius: 20px;
-            padding: 18px 25px;
+            padding: 18px;
+            width: 100%;
             color: #fff;
             font-size: 16px;
-            font-weight: bold;
+            margin-bottom: 20px;
             text-align: center;
-            letter-spacing: 2px;
-            transition: all 0.3s ease;
+            transition: 0.3s;
+            outline: none;
         }
 
-        .militar-input:focus {
-            border-color: var(--eb-ouro);
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
-            background: #111214;
+        .input-box:focus { border-color: var(--eb-ouro); box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); }
+
+        /* BOTÃO TÁTICO */
+        .btn-auth {
+            background: var(--eb-ouro);
+            color: #000;
+            width: 100%;
+            padding: 18px;
+            border-radius: 20px;
+            border: none;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: 0.3s;
         }
 
-        /* ANIMAÇÕES DE ESTADO */
-        @keyframes fadeInPage { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes logoFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .btn-auth:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2); }
 
-        .loader-dots { display: none; margin-top: 15px; }
-        .dot { width: 8px; height: 8px; background: var(--eb-ouro); border-radius: 50%; display: inline-block; animation: dotPulse 1.5s infinite; }
-        @keyframes dotPulse { 0%, 100% { opacity: 0.2; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-    <div class="overlay-grid"></div>
+    <div class="login-card">
+        <img src="https://i.imgur.com/8Y6E7Gv.png" class="eb-brand" alt="EB">
+        <h1 class="title">Área Restrita</h1>
+        <p class="subtitle">Autenticação Orbitron</p>
 
-    <div class="auth-wrapper">
-        <div class="card-militar-auth" id="login-form">
-            <img src="https://i.imgur.com/8Y6E7Gv.png" class="brand-logo" alt="EB Logo">
-            
-            <h1 class="auth-title">Identificação EB</h1>
-            <p class="auth-desc">Acesse a rede segura do Comando Geral utilizando sua credencial exclusiva de militar.</p>
-
-            <div class="field-container">
-                <label class="field-label">Chave de Acesso Tático</label>
-                <input type="text" id="accessKey" class="militar-input" 
-                       placeholder="ORB-XXXX-XXXX-XXXX-XXXX" 
-                       autocomplete="off" maxlength="23">
-            </div>
-
-            <button class="btn-eb" id="submitBtn" onclick="AuthProcess.execute()">
-                <i class="fas fa-sign-in-alt"></i> AUTENTICAR
-            </button>
-
-            <div id="authStatus" style="margin-top: 20px; font-weight: bold; font-size: 13px;"></div>
-
-            <div class="loader-dots" id="authLoader">
-                <span class="dot" style="animation-delay: 0.1s"></span>
-                <span class="dot" style="animation-delay: 0.3s"></span>
-                <span class="dot" style="animation-delay: 0.5s"></span>
-            </div>
-
-            <div style="margin-top: 40px;">
-                <a href="/" class="link-militar">
-                    <i class="fas fa-arrow-left"></i> VOLTAR AO ATENDIMENTO
-                </a>
-            </div>
-        </div>
+        <input type="password" id="key" class="input-box" placeholder="INSIRA SUA CHAVE ORB">
+        <button class="btn-auth" onclick="Auth.login()">ACESSAR TERMINAL</button>
+        
+        <div id="status" style="margin-top: 20px; font-weight: bold; font-size: 12px;"></div>
     </div>
 
-    <script src="/firebase-config.js"></script>
-    <script src="/logs.js"></script>
     <script>
-        /**
-         * @namespace AuthProcess
-         * Gerenciador de ciclo de vida da autenticação.
+        /** * LÓGICA DE SEGURANÇA INTEGRADA
+         * Sincronizada com o módulo de Logs de 1000 linhas
          */
-        const AuthProcess = {
-            
-            // Configurações de Auditoria
-            config: {
-                maxAttempts: 5,
-                currentAttempts: 0,
-                lockoutTime: 30000, // 30 segundos
-                isLocked: false
-            },
+        const Auth = {
+            login: async () => {
+                const key = document.getElementById('key').value.trim();
+                const status = document.getElementById('status');
 
-            /**
-             * Formata a chave em tempo real enquanto o militar digita.
-             */
-            formatInput: function() {
-                const input = document.getElementById('accessKey');
-                input.addEventListener('input', (e) => {
-                    let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-                    if (value.startsWith('ORB')) {
-                        value = value.substring(3);
-                    }
-                    let parts = value.match(/.{1,4}/g);
-                    if (parts) {
-                        e.target.value = 'ORB-' + parts.join('-').substring(0, 19);
-                    } else if (value.length > 0) {
-                        e.target.value = 'ORB-' + value;
-                    } else {
-                        e.target.value = '';
-                    }
-                });
-            },
+                if(!key) return;
 
-            /**
-             * Mostra mensagens de feedback com cores táticas.
-             */
-            setStatus: function(msg, type) {
-                const statusEl = document.getElementById('authStatus');
-                statusEl.innerText = msg;
-                statusEl.style.color = type === 'error' ? '#ed4245' : (type === 'success' ? '#23a559' : '#d4af37');
-                
-                if(type === 'error') {
-                    const card = document.getElementById('login-form');
-                    card.style.borderColor = '#ed4245';
-                    setTimeout(() => card.style.borderColor = 'rgba(212, 175, 55, 0.2)', 1000);
-                }
-            },
-
-            /**
-             * Lógica principal de execução do Login.
-             */
-            execute: async function() {
-                if (this.config.isLocked) return;
-
-                const keyInput = document.getElementById('accessKey');
-                const btn = document.getElementById('submitBtn');
-                const loader = document.getElementById('authLoader');
-                const key = keyInput.value.trim();
-
-                // 1. Validação de Estrutura (REGEX)
-                if (key.length < 15) {
-                    this.setStatus("ERRO: ESTRUTURA DE CHAVE INCOMPLETA", "error");
-                    return;
-                }
-
-                // 2. Preparação de UI
-                btn.style.display = 'none';
-                loader.style.display = 'block';
-                this.setStatus("VERIFICANDO CREDENCIAIS NO SERVIDOR...", "wait");
+                status.innerText = "VERIFICANDO...";
+                status.style.color = "var(--eb-ouro)";
 
                 try {
-                    // 3. Consulta ao Firebase Realtime Database
-                    const snapshot = await db.ref('logins_gerados/' + key).once('value');
-                    const militarData = snapshot.val();
+                    const snap = await db.ref(`logins_gerados/${key}`).once('value');
+                    const user = snap.val();
 
-                    if (militarData) {
-                        // SUCESSO NO LOGIN
-                        this.setStatus(`ACESSO AUTORIZADO: BEM-VINDO, ${militarData.responsavel.toUpperCase()}`, "success");
-                        
-                        // Gravação de Log de Auditoria
-                        enviarLog("🔓 ACESSO AO SISTEMA", [
-                            { name: "Militar", value: militarData.responsavel, inline: true },
-                            { name: "Cargo", value: militarData.cargo, inline: true },
-                            { name: "IP (Referencial)", value: "SISTEMA SEGURO", inline: false }
-                        ], 2335833);
-
-                        // Persistência de Sessão Local
+                    if(user) {
                         localStorage.setItem('militar_chave', key);
-                        localStorage.setItem('militar_nome', militarData.responsavel);
-
-                        // Redirecionamento com Delay para UX
+                        localStorage.setItem('militar_nome', user.responsavel);
+                        status.style.color = "#23a559";
+                        status.innerText = "ACESSO PERMITIDO!";
+                        
+                        // Direcionamento tático baseado no cargo
                         setTimeout(() => {
-                            window.location.href = (militarData.cargo === 'dono') ? '/dono' : '/admin';
-                        }, 2000);
-
+                            window.location.href = user.cargo === 'dono' ? '/dono.html' : '/admin.html';
+                        }, 1500);
                     } else {
-                        // FALHA NO LOGIN
-                        throw new Error("Credencial Inválida");
+                        status.style.color = "#f23f42";
+                        status.innerText = "CHAVE INVÁLIDA!";
+                        if(typeof enviarLog === 'function') enviarLog("TENTATIVA DE INVASÃO", [{name: "Chave Usada", value: key}], 15105570);
                     }
-
-                } catch (error) {
-                    this.config.currentAttempts++;
-                    this.handleFailure();
-                }
-            },
-
-            /**
-             * Gerencia falhas e bloqueios temporários.
-             */
-            handleFailure: function() {
-                const btn = document.getElementById('submitBtn');
-                const loader = document.getElementById('authLoader');
-
-                loader.style.display = 'none';
-                btn.style.display = 'block';
-
-                if (this.config.currentAttempts >= this.config.maxAttempts) {
-                    this.config.isLocked = true;
-                    this.setStatus(`SISTEMA BLOQUEADO POR SEGURANÇA. AGUARDE 30S.`, "error");
-                    setTimeout(() => {
-                        this.config.isLocked = false;
-                        this.config.currentAttempts = 0;
-                        this.setStatus("SISTEMA DESBLOQUEADO.", "wait");
-                    }, this.config.lockoutTime);
-                } else {
-                    this.setStatus(`ACESSO NEGADO. TENTATIVA ${this.config.currentAttempts}/${this.config.maxAttempts}`, "error");
+                } catch (e) {
+                    status.innerText = "ERRO DE CONEXÃO.";
                 }
             }
-        };
-
-        // Inicialização dos Eventos
-        window.onload = () => {
-            AuthProcess.formatInput();
-            
-            // Listener de Tecla Enter
-            document.addEventListener('keypress', (e) => {
-                if(e.key === 'Enter') AuthProcess.execute();
-            });
-
-            console.log("%c ORBITRON SYSTEM SECURITY ATIVA ", "background: #d4af37; color: #000; font-weight: bold;");
         };
     </script>
 </body>
