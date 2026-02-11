@@ -1,55 +1,86 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
     <title>LOGIN STAFF | ORBITRON</title>
+    
+    <link rel="stylesheet" href="/styles.css">
+    
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <script src="/firebase-config.js"></script>
+
     <style>
-        :root { --bg: #313338; --card: #2b2d31; --blue: #5865F2; }
-        * { margin:0; padding:0; box-sizing:border-box; font-family: 'gg sans', sans-serif; }
-        body { background: var(--bg); color: white; display: flex; align-items: center; justify-content: center; height: 100vh; }
-        .login-card { background: var(--card); padding: 40px; border-radius: 20px; width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: fadeIn 0.5s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        h2 { margin-bottom: 10px; }
-        p { color: #b5bac1; margin-bottom: 25px; font-size: 14px; }
-        input { width: 100%; padding: 15px; background: #1e1f22; border: 1px solid #3f4147; border-radius: 10px; color: white; text-align: center; letter-spacing: 2px; font-weight: bold; outline: none; margin-bottom: 20px; }
-        button { width: 100%; padding: 15px; background: var(--blue); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        button:hover { background: #4752c4; transform: scale(1.02); }
-        .back { display: block; margin-top: 20px; color: #00a8fc; text-decoration: none; font-size: 13px; }
+        /* Ajuste específico para destacar o campo de login */
+        .login-card input:focus {
+            transform: scale(1.03); /* Leve "zoom" visual no campo ao clicar */
+            border-color: var(--discord-blue);
+            box-shadow: 0 0 15px rgba(88, 101, 242, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .login-card input {
+            transition: all 0.3s ease;
+            text-transform: uppercase; /* Força visual de chave militar */
+        }
     </style>
 </head>
 <body>
+
     <div class="login-card">
         <h2>Acesso Militar</h2>
-        <p>Insira sua chave de acesso gerada pelo Comando.</p>
-        <input type="text" id="access-key" placeholder="ORB-XXXXXXXX">
-        <button onclick="autenticar()">AUTENTICAR</button>
-        <a href="/" class="back">Voltar ao Suporte</a>
+        <p>Insira sua chave de acesso gerada pelo Comando para autenticar seu perfil.</p>
+        
+        <input type="text" id="access-key" placeholder="ORB-XXXXXXXX" autocomplete="off">
+        
+        <button class="btn-blue" onclick="autenticar()">AUTENTICAR ACESSO</button>
+        
+        <a href="/" class="link" style="display: block; margin-top: 20px; font-size: 13px;">
+            ← Voltar ao Suporte Player
+        </a>
     </div>
 
     <script>
         function autenticar() {
             const chave = document.getElementById('access-key').value.trim().toUpperCase();
-            if(!chave) return alert("Insira a chave!");
+            
+            if(!chave) {
+                alert("Erro: A chave de acesso é obrigatória.");
+                return;
+            }
 
+            // Busca a chave no banco de dados
             db.ref('logins_gerados/' + chave).once('value', snap => {
                 const dados = snap.val();
+                
                 if(dados) {
+                    // Atualiza ou cria o perfil do usuário vinculado à chave
                     db.ref('usuarios/' + chave).update({
                         nome: dados.responsavel,
                         cargo: dados.cargo
                     }).then(() => {
+                        // Salva a chave localmente para manter o login
                         localStorage.setItem('militar_chave', chave);
-                        window.location.href = (dados.cargo === 'dono') ? '/dono' : '/admin';
+                        
+                        // Redirecionamento inteligente baseado no cargo
+                        if(dados.cargo === 'dono') {
+                            window.location.href = '/dono';
+                        } else {
+                            window.location.href = '/admin';
+                        }
                     });
-                } else { alert("Chave inválida ou inexistente!"); }
+                } else {
+                    alert("Acesso Negado: Chave inválida, expirada ou não encontrada no sistema.");
+                }
             });
         }
+
+        // Permitir login ao apertar "Enter"
+        document.getElementById('access-key').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') autenticar();
+        });
     </script>
 </body>
 </html>
