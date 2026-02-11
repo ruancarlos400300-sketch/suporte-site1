@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ORBITRON | CENTRAL DE COMANDO</title>
+    <title>SISTEMA ORBITRON | ADMIN</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
@@ -12,191 +12,129 @@
 
     <style>
         :root {
-            --bg-deep: #111214;
-            --bg-sidebar: #1e1f22;
-            --bg-card: #2b2d31;
+            --bg-deep: #0b0b0d;
+            --bg-sidebar: #111214;
+            --bg-chat: #1e1f22;
             --eb-ouro: #d4af37;
-            --eb-perigo: #f23f42;
-            --success: #23a559;
-            --text-main: #dbdee1;
-            --radius-informal: 25px;
+            --eb-danger: #ed4245;
+            --text-main: #ffffff;
+            --radius: 25px;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'gg sans', 'Segoe UI', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
 
-        body {
-            background-color: var(--bg-deep);
-            color: var(--text-main);
-            height: 100vh;
-            display: flex;
-            overflow: hidden;
-        }
+        body { background: var(--bg-deep); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; }
 
-        /* SIDEBAR DE TRANSMISSÕES */
+        /* LISTA LATERAL */
         .sidebar {
-            width: 320px;
+            width: 300px;
             background: var(--bg-sidebar);
+            border-right: 1px solid #222;
             display: flex;
             flex-direction: column;
-            border-right: 1px solid rgba(255,255,255,0.05);
         }
 
-        .sidebar-header {
-            padding: 30px 20px;
-            text-align: center;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
+        .sidebar-header { padding: 25px; border-bottom: 1px solid #222; text-align: center; }
+        .sidebar-header h2 { font-size: 12px; color: var(--eb-ouro); text-transform: uppercase; letter-spacing: 2px; }
 
-        .sidebar-header h2 { font-size: 14px; color: var(--eb-ouro); text-transform: uppercase; letter-spacing: 2px; }
+        .ticket-list { flex: 1; overflow-y: auto; padding: 15px; }
 
-        .ticket-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-        }
-
-        /* CARD DE TICKET NA LISTA */
         .ticket-card {
-            background: var(--bg-card);
+            background: #2b2d31;
             padding: 15px;
             border-radius: 18px;
             margin-bottom: 10px;
             cursor: pointer;
-            transition: 0.3s;
+            transition: 0.2s;
             display: flex;
             align-items: center;
             gap: 12px;
-            border: 1px solid transparent;
+            border: 2px solid transparent;
         }
 
-        .ticket-card:hover { transform: translateX(5px); background: #35373c; }
-        .ticket-card.active { border-color: var(--eb-ouro); background: rgba(212, 175, 55, 0.05); }
+        .ticket-card:hover { background: #35373c; }
+        .ticket-card.active { border-color: var(--eb-ouro); background: rgba(212, 175, 55, 0.1); }
 
         .avatar {
-            width: 40px; height: 40px;
-            background: var(--eb-ouro);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #000;
-            font-weight: 900;
+            width: 40px; height: 40px; background: var(--eb-ouro);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            color: #000; font-weight: bold; font-size: 18px;
         }
 
-        /* ÁREA DE CHAT PRINCIPAL */
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: var(--bg-deep);
-        }
+        /* ÁREA DE CONVERSA */
+        .chat-area { flex: 1; display: flex; flex-direction: column; }
 
         .chat-header {
-            padding: 20px 30px;
-            background: var(--bg-sidebar);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding: 15px 25px; background: var(--bg-sidebar);
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #222;
         }
 
         #chat-window {
-            flex: 1;
-            padding: 30px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+            flex: 1; padding: 25px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 15px;
+            background: linear-gradient(to bottom, #111214, #1e1f22);
         }
 
-        /* BALÕES DE MENSAGEM */
-        .msg { max-width: 70%; padding: 12px 18px; border-radius: 20px; font-size: 15px; }
-        .msg.staff { align-self: flex-end; background: var(--eb-ouro); color: #000; border-bottom-right-radius: 4px; font-weight: 600; }
-        .msg.recruta { align-self: flex-start; background: var(--bg-card); color: #fff; border-bottom-left-radius: 4px; }
+        /* MENSAGENS */
+        .msg { max-width: 75%; padding: 12px 18px; border-radius: 20px; font-size: 15px; line-height: 1.4; }
+        .msg.staff { align-self: flex-end; background: var(--eb-ouro); color: #000; border-bottom-right-radius: 2px; }
+        .msg.recruta { align-self: flex-start; background: #2b2d31; color: #fff; border-bottom-left-radius: 2px; }
 
-        /* RODAPÉ DE INPUT */
-        .chat-footer {
-            padding: 20px 30px;
-            background: var(--bg-sidebar);
-            display: flex;
-            gap: 15px;
+        /* INPUT RODAPÉ */
+        .chat-footer { padding: 20px; background: var(--bg-sidebar); display: flex; gap: 10px; }
+        .input-box {
+            flex: 1; background: #000; border: 1px solid #333;
+            padding: 12px 20px; border-radius: 25px; color: #fff; outline: none;
         }
 
-        .input-wrapper {
-            flex: 1;
-            background: var(--bg-deep);
-            border-radius: 20px;
-            padding: 5px 15px;
-            display: flex;
-            align-items: center;
+        .btn-send {
+            background: var(--eb-ouro); border: none; width: 45px; height: 45px;
+            border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
 
-        .input-wrapper input {
-            flex: 1;
-            background: transparent;
-            border: none;
-            padding: 10px;
-            color: #fff;
-            outline: none;
+        .btn-fin {
+            background: var(--eb-danger); color: #fff; border: none;
+            padding: 8px 15px; border-radius: 10px; font-weight: bold; cursor: pointer;
         }
 
-        .btn-action {
-            background: var(--eb-ouro);
-            border: none;
-            width: 45px; height: 45px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .btn-finish {
-            background: var(--eb-perigo);
-            color: #fff;
-            padding: 10px 20px;
-            border-radius: 12px;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        /* RESPONSIVIDADE MOBILE */
         @media (max-width: 768px) {
             .sidebar { width: 80px; }
-            .sidebar-header h2, .ticket-card div:last-child { display: none; }
-            .ticket-card { justify-content: center; padding: 10px; }
+            .sidebar-header h2, .ticket-card .info { display: none; }
         }
     </style>
 </head>
 <body>
 
     <aside class="sidebar">
-        <div class="sidebar-header">
-            <h2>Transmissões</h2>
-        </div>
+        <div class="sidebar-header"><h2>Oficial de Dia</h2></div>
         <div class="ticket-list" id="ticket-list">
-            </div>
+            <div style="text-align:center; padding:20px; font-size:10px; opacity:0.5;">AGUARDANDO DADOS...</div>
+        </div>
     </aside>
 
-    <main class="main-content">
+    <main class="chat-area">
         <header class="chat-header">
-            <div id="active-user-info" style="display: flex; align-items: center; gap: 15px;">
-                <div class="avatar" id="header-avatar">?</div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="avatar" id="h-avatar">?</div>
                 <div>
-                    <h3 id="header-name">Aguardando...</h3>
-                    <span style="font-size: 10px; color: var(--success); font-weight: 800;">CANAL CRIPTOGRAFADO</span>
+                    <h4 id="h-name">Selecione um Recruta</h4>
+                    <span style="font-size: 9px; color: var(--eb-ouro); font-weight: bold;">CANAL CRIPTOGRAFADO</span>
                 </div>
             </div>
-            <button class="btn-finish" onclick="App.finalizar()">FINALIZAR</button>
+            <button class="btn-fin" onclick="App.finalizar()">FINALIZAR</button>
         </header>
 
         <div id="chat-window">
+            <div style="margin: auto; text-align: center; opacity: 0.3;">
+                <i class="fas fa-comments" style="font-size: 50px; margin-bottom: 10px;"></i>
+                <p>Nenhuma conversa ativa</p>
             </div>
+        </div>
 
         <div class="chat-footer">
-            <div class="input-wrapper">
-                <input type="text" id="msg-input" placeholder="Enviar mensagem tática...">
-            </div>
-            <button class="btn-action" onclick="App.enviar()">
+            <input type="text" id="msg-input" class="input-box" placeholder="Digite sua instrução...">
+            <button class="btn-send" onclick="App.enviar()">
                 <i class="fas fa-paper-plane"></i>
             </button>
         </div>
@@ -205,7 +143,7 @@
     <script>
         const App = {
             ticketAtivo: null,
-            nomeStaff: localStorage.getItem('militar_nome') || "Oficial",
+            nomeMilitar: localStorage.getItem('militar_nome') || "Oficial",
 
             init: () => {
                 App.ouvirTickets();
@@ -216,19 +154,22 @@
                     const list = document.getElementById('ticket-list');
                     list.innerHTML = "";
                     
-                    if(!snap.exists()) return;
+                    if (!snap.exists()) {
+                        list.innerHTML = "<div style='font-size:10px; text-align:center;'>Nenhum recruta online.</div>";
+                        return;
+                    }
 
                     snap.forEach(child => {
                         const t = child.val();
-                        if(t.status !== 'aberto') return;
+                        if (t.status !== 'aberto') return;
 
                         const div = document.createElement('div');
                         div.className = `ticket-card ${App.ticketAtivo === child.key ? 'active' : ''}`;
                         div.innerHTML = `
-                            <div class="avatar">${t.nome_usuario.charAt(0)}</div>
-                            <div style="flex:1">
+                            <div class="avatar">${t.nome_usuario.charAt(0).toUpperCase()}</div>
+                            <div class="info">
                                 <div style="font-weight:bold; font-size:14px;">${t.nome_usuario}</div>
-                                <div style="font-size:10px; opacity:0.6;">${t.tipo}</div>
+                                <div style="font-size:10px; color:var(--eb-ouro);">${t.tipo}</div>
                             </div>
                         `;
                         div.onclick = () => App.selecionar(child.key, t.nome_usuario);
@@ -239,26 +180,36 @@
 
             selecionar: (id, nome) => {
                 App.ticketAtivo = id;
-                document.getElementById('header-name').innerText = nome;
-                document.getElementById('header-avatar').innerText = nome.charAt(0);
+                document.getElementById('h-name').innerText = nome;
+                document.getElementById('h-avatar').innerText = nome.charAt(0).toUpperCase();
+                
+                document.getElementById('chat-window').innerHTML = "<div style='text-align:center; padding:20px; font-size:11px;'>CARREGANDO MENSAGENS...</div>";
+                
                 App.ouvirMensagens(id);
             },
 
             ouvirMensagens: (id) => {
+                // Referência ao nó plural 'mensagens' conforme o index.html
                 db.ref(`mensagens/${id}`).on('value', snap => {
                     const win = document.getElementById('chat-window');
                     win.innerHTML = "";
                     
+                    if (!snap.exists()) {
+                        win.innerHTML = "<div style='margin:auto; opacity:0.4;'>Aguardando primeira mensagem...</div>";
+                        return;
+                    }
+
                     snap.forEach(child => {
                         const m = child.val();
                         const isStaff = m.tipo === 'staff';
                         
-                        win.innerHTML += `
-                            <div class="msg ${isStaff ? 'staff' : 'recruta'}">
-                                ${m.texto}
-                                <div style="font-size:9px; opacity:0.5; margin-top:5px;">${m.autor}</div>
-                            </div>
+                        const div = document.createElement('div');
+                        div.className = `msg ${isStaff ? 'staff' : 'recruta'}`;
+                        div.innerHTML = `
+                            ${m.texto}
+                            <div style="font-size:9px; opacity:0.5; margin-top:5px; text-align:right;">${m.autor}</div>
                         `;
+                        win.appendChild(div);
                     });
                     win.scrollTop = win.scrollHeight;
                 });
@@ -266,30 +217,33 @@
 
             enviar: () => {
                 const input = document.getElementById('msg-input');
-                if(!input.value.trim() || !App.ticketAtivo) return;
+                const texto = input.value.trim();
+                
+                if (!texto || !App.ticketAtivo) return;
 
                 db.ref(`mensagens/${App.ticketAtivo}`).push({
-                    autor: App.nomeStaff,
-                    texto: input.value,
+                    autor: App.nomeMilitar,
+                    texto: texto,
                     tipo: 'staff',
                     timestamp: Date.now()
                 });
+
                 input.value = "";
             },
 
-            finalizar: async () => {
-                if(!App.ticketAtivo) return;
-                if(confirm("Deseja encerrar este atendimento?")){
-                    await db.ref(`tickets/${App.ticketAtivo}`).update({ status: 'fechado' });
-                    location.reload();
+            finalizar: () => {
+                if (!App.ticketAtivo) return;
+                if (confirm("Encerrar este atendimento?")) {
+                    db.ref(`tickets/${App.ticketAtivo}`).update({ status: 'fechado' });
+                    App.ticketAtivo = null;
+                    document.getElementById('chat-window').innerHTML = "";
+                    document.getElementById('h-name').innerText = "Selecione um Recruta";
                 }
             }
         };
 
         window.onload = App.init;
-        document.getElementById('msg-input').addEventListener('keypress', (e) => {
-            if(e.key === 'Enter') App.enviar();
-        });
+        document.getElementById('msg-input').onkeypress = (e) => { if(e.key === 'Enter') App.enviar(); };
     </script>
 </body>
 </html>
