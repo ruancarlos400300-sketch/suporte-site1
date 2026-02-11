@@ -3,96 +3,364 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ESTADO-MAIOR | ORBITRON</title>
+    <title>ESTADO-MAIOR | COMANDO SUPREMO EB</title>
+
     <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
-    <script src="/firebase-config.js"></script>
-    <script src="/logs.js"></script>
+
+    <style>
+        /* CSS AVANÇADO DE DASHBOARD (RECORTE PROFISSIONAL) */
+        body {
+            align-items: flex-start;
+            overflow-y: auto;
+            padding: 40px 20px;
+            background: radial-gradient(circle at top right, #1a1b1e, #090a0b);
+        }
+
+        .dashboard-container {
+            width: 100%;
+            max-width: 1300px;
+            margin: 0 auto;
+            animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        /* HEADER TÁTICO */
+        .hq-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 50px;
+            padding: 30px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 30px;
+            border: 1px solid rgba(212, 175, 55, 0.1);
+        }
+
+        .hq-title h1 { font-size: 32px; letter-spacing: -1px; margin: 0; }
+        .hq-title p { color: var(--eb-ouro); font-weight: 700; text-transform: uppercase; font-size: 12px; }
+
+        /* MÓDULOS DE FERRAMENTAS */
+        .dono-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .tool-card {
+            background: var(--discord-card);
+            border-radius: 35px;
+            padding: 40px;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--eb-ouro);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        .tool-card::after {
+            content: "\f3ed"; font-family: "Font Awesome 5 Free"; font-weight: 900;
+            position: absolute; right: -20px; bottom: -20px;
+            font-size: 120px; opacity: 0.03; color: var(--eb-ouro);
+        }
+
+        /* LISTA DE EFETIVO */
+        .militar-table {
+            width: 100%;
+            background: var(--discord-card);
+            border-radius: 30px;
+            padding: 30px;
+            box-shadow: var(--shadow-elite);
+        }
+
+        .table-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 100px;
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            align-items: center;
+            transition: 0.2s;
+        }
+
+        .table-row:hover { background: rgba(255,255,255,0.02); }
+        .table-header { font-weight: 900; color: var(--eb-ouro); font-size: 11px; text-transform: uppercase; }
+
+        /* STATUS BADGES */
+        .rank-tag {
+            background: var(--eb-verde-oliva);
+            padding: 5px 12px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 768px) {
+            .hq-header { flex-direction: column; text-align: center; gap: 20px; }
+            .dono-grid { grid-template-columns: 1fr; }
+            .table-row { grid-template-columns: 1fr 1fr; gap: 10px; }
+        }
+    </style>
 </head>
-<body style="align-items: flex-start; padding-top: 50px;">
+<body>
 
-    <div class="card-militar" style="max-width: 900px;">
-        <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 30px;">
-            <img src="https://i.imgur.com/8Y6E7Gv.png" width="50"> <h2>Painel de Comando Superior</h2>
-        </div>
+    <div class="dashboard-container">
         
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+        <header class="hq-header">
+            <div class="hq-title">
+                <h1>Estado-Maior EB</h1>
+                <p><i class="fas fa-crosshairs"></i> Sistema de Monitoramento de Ativos e Efetivo</p>
+            </div>
+            <div class="hq-actions">
+                <button class="btn-eb" onclick="AdminCore.exportData()" style="background: var(--discord-main); font-size: 11px;">
+                    <i class="fas fa-download"></i> BACKUP DATABASE
+                </button>
+            </div>
+        </header>
+
+        <div class="dono-grid">
             
-            <div style="background: var(--bg-input); padding: 20px; border-radius: 8px; text-align: left; border-left: 4px solid var(--eb-ouro);">
-                <label>Emitir Ordem de Acesso</label>
-                <input type="text" id="staff-nick" placeholder="Nick do Militar (Roblox)">
-                <label style="margin-top: 15px;">Patente de Sistema</label>
-                <select id="staff-cargo">
-                    <option value="atendente">SOLDADO (ATENDENTE)</option>
-                    <option value="superior">OFICIAL (SUPERIOR)</option>
-                    <option value="dono">GENERAL (DONO)</option>
-                </select>
-                <button class="btn-eb" style="margin-top: 20px;" onclick="gerarChave()">GERAR CREDENCIAL</button>
-                <div id="result-key" style="margin-top: 15px; background: #000; padding: 10px; border-radius: 4px; color: var(--eb-ouro); font-family: monospace; display: none; text-align: center;"></div>
+            <div class="tool-card">
+                <h2 style="margin-bottom: 10px;"><i class="fas fa-key" style="color: var(--eb-ouro);"></i> Emitir Credencial</h2>
+                <p class="subtitle">Gerar nova chave de acesso para oficiais da Staff.</p>
+                
+                <div class="input-group">
+                    <label>Identificação do Militar (Roblox)</label>
+                    <input type="text" id="target-nick" placeholder="Ex: General_Exemplo">
+                </div>
+
+                <div class="input-group">
+                    <label>Nível de Autoridade</label>
+                    <select id="target-rank">
+                        <option value="atendente">SOLDADO (ATENDENTE)</option>
+                        <option value="superior">OFICIAL (SUPERIOR)</option>
+                        <option value="dono">GENERAL (ADMINISTRADOR)</option>
+                    </select>
+                </div>
+
+                <button class="btn-eb" onclick="AdminCore.generateKey()">
+                    FINALIZAR E GERAR CHAVE
+                </button>
+
+                <div id="key-result" style="display:none; margin-top: 25px; animation: fadeIn 0.5s ease;">
+                    <div style="background: #111214; padding: 20px; border-radius: 20px; border: 1px dashed var(--eb-ouro);">
+                        <small style="color: var(--text-muted); font-weight: bold;">CHAVE CRIPTOGRAFADA:</small>
+                        <div id="display-key" style="color: var(--eb-ouro); font-size: 20px; font-weight: 900; margin-top: 5px; letter-spacing: 2px;"></div>
+                        <button onclick="AdminCore.copyKey()" style="background:none; border:none; color:#fff; cursor:pointer; font-size:12px; margin-top:10px;">
+                            <i class="fas fa-copy"></i> COPIAR CÓDIGO
+                        </button>
+                    </div>
+                </div>
             </div>
 
-            <div style="background: var(--bg-input); padding: 20px; border-radius: 8px; text-align: left; border-left: 4px solid var(--text-muted);">
-                <label>Rastreamento de Identidade</label>
-                <input type="text" id="search-key" placeholder="Cole a chave ORB aqui">
-                <button class="btn-eb" style="background: #4e5058; margin-top: 20px;" onclick="buscar()">PESQUISAR DATABASE</button>
-                <div id="result-search" style="margin-top: 15px; font-weight: bold; color: var(--eb-verde-claro);"></div>
+            <div class="tool-card">
+                <h2 style="margin-bottom: 10px;"><i class="fas fa-chart-line" style="color: var(--eb-verde-glow);"></i> Gestão de Pontos</h2>
+                <p class="subtitle">Adicionar ou remover pontuação de mérito do efetivo.</p>
+                
+                <div class="input-group">
+                    <label>Buscar Militar na Database</label>
+                    <input type="text" id="point-nick" placeholder="Digite o nick exato...">
+                </div>
+
+                <div style="display: flex; gap: 15px;">
+                    <div class="input-group" style="flex: 1;">
+                        <label>Quantidade</label>
+                        <input type="number" id="point-amount" value="1.0" step="0.5">
+                    </div>
+                    <div style="flex: 1; display: flex; align-items: flex-end; padding-bottom: 25px;">
+                        <button class="btn-eb" onclick="AdminCore.updatePoints('add')" style="padding: 15px;">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        <button class="btn-eb" onclick="AdminCore.updatePoints('sub')" style="background: var(--danger); padding: 15px; margin-left: 10px;">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="point-status" style="font-size: 12px; font-weight: bold;"></div>
             </div>
 
         </div>
 
-        <h2 style="margin-top: 40px; font-size: 18px; border-bottom: 1px solid var(--bg-input); padding-bottom: 10px;">Efetivo Mobilizado</h2>
-        <div id="lista-membros" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; margin-top: 20px;"></div>
+        <div class="militar-table">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 style="margin: 0;">Efetivo Mobilizado</h2>
+                <div id="total-count" class="rank-tag">0 MILITARES</div>
+            </div>
+
+            <div class="table-row table-header">
+                <span>Identificação</span>
+                <span>Patente</span>
+                <span>Pontuação</span>
+                <span>Ações</span>
+            </div>
+
+            <div id="militar-list-container">
+                <div style="padding: 40px; text-align: center; opacity: 0.5;">
+                    <i class="fas fa-sync fa-spin"></i> Lendo registros táticos...
+                </div>
+            </div>
+        </div>
+
     </div>
 
+    <script src="/firebase-config.js"></script>
+    <script src="/logs.js"></script>
     <script>
-        function gerarChave() {
-            const nick = document.getElementById('staff-nick').value.trim();
-            const cargo = document.getElementById('staff-cargo').value;
-            if(!nick) return alert("Erro: Identifique o militar.");
+        /**
+         * @namespace AdminCore
+         * Motor de processamento do Estado-Maior
+         */
+        const AdminCore = {
+            
+            lastGeneratedKey: "",
 
-            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-            let code = '';
-            for(let i=0; i<16; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
-            const chave = `ORB-${code.match(/.{1,4}/g).join('-')}`;
+            /**
+             * Inicializa o sistema e verifica permissões de Dono
+             */
+            init: async () => {
+                console.log("[HQ] Inicializando Engine de Comando...");
+                const sessao = localStorage.getItem('militar_chave');
+                
+                const snap = await db.ref(`logins_gerados/${sessao}`).once('value');
+                if(!snap.val() || snap.val().cargo !== 'dono') {
+                    alert("ACESSO NEGADO: Você não possui autorização de General.");
+                    window.location.href = '/login';
+                    return;
+                }
+                
+                AdminCore.loadMilitarList();
+            },
 
-            db.ref('logins_gerados/' + chave).set({
-                responsavel: nick,
-                cargo: cargo,
-                criadoEm: Date.now()
-            }).then(() => {
-                const res = document.getElementById('result-key');
-                res.innerText = chave;
-                res.style.display = 'block';
-                enviarLog("🔑 NOVA CREDENCIAL GERADA", [
-                    { name: "Militar", value: nick, inline: true },
-                    { name: "Patente", value: cargo.toUpperCase(), inline: true },
-                    { name: "Chave", value: `||${chave}||`, inline: false }
-                ], 12951641);
-            });
-        }
+            /**
+             * Gera uma chave segura com entropia baseada em tempo e caracteres hexadecimais
+             */
+            generateKey: async () => {
+                const nick = document.getElementById('target-nick').value.trim();
+                const rank = document.getElementById('target-rank').value;
 
-        function buscar() {
-            const k = document.getElementById('search-key').value.trim();
-            db.ref('logins_gerados/' + k).once('value', s => {
-                const d = s.val();
-                document.getElementById('result-search').innerText = d ? `IDENTIFICADO: ${d.responsavel} [${d.cargo.toUpperCase()}]` : "⚠️ CHAVE NÃO ENCONTRADA";
-            });
-        }
+                if(nick.length < 3) return alert("Erro: Nick inválido.");
 
-        db.ref('usuarios').on('value', snap => {
-            const div = document.getElementById('lista-membros');
-            div.innerHTML = "";
-            snap.forEach(m => {
-                const u = m.val();
-                div.innerHTML += `
-                <div style="background: var(--bg-input); padding: 15px; border-radius: 8px; border-bottom: 3px solid var(--eb-verde);">
-                    <span class="badge">${u.cargo}</span>
-                    <div style="margin-top: 8px; font-weight: bold;">${u.nome}</div>
-                    <div style="color: var(--eb-verde-claro); font-size: 18px; margin-top: 5px;">${(u.pontos || 0).toFixed(1)} PTS</div>
-                </div>`;
-            });
-        });
+                const pool = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+                const gen = (n) => Array.from({length: n}, () => pool[Math.floor(Math.random() * pool.length)]).join('');
+                
+                const finalKey = `ORB-${gen(4)}-${gen(4)}-${gen(4)}-${gen(4)}`;
+                this.lastGeneratedKey = finalKey;
+
+                try {
+                    await db.ref(`logins_gerados/${finalKey}`).set({
+                        responsavel: nick,
+                        cargo: rank,
+                        gerado_em: Date.now(),
+                        status: "ativo"
+                    });
+
+                    document.getElementById('display-key').innerText = finalKey;
+                    document.getElementById('key-result').style.display = 'block';
+
+                    enviarLog("🔑 NOVA CREDENCIAL EMITIDA", [
+                        { name: "Oficial Destino", value: nick, inline: true },
+                        { name: "Nível de Acesso", value: rank.toUpperCase(), inline: true },
+                        { name: "Chave", value: `||${finalKey}||`, inline: false }
+                    ], 15844367);
+
+                } catch (e) {
+                    alert("Erro ao gravar na database.");
+                }
+            },
+
+            /**
+             * Atualiza a pontuação de mérito do militar
+             */
+            updatePoints: async (mode) => {
+                const nick = document.getElementById('point-nick').value.trim();
+                const val = parseFloat(document.getElementById('point-amount').value);
+                const status = document.getElementById('point-status');
+
+                if(!nick) return;
+
+                const ref = db.ref('usuarios');
+                const snap = await ref.orderByChild('nome').equalTo(nick).once('value');
+
+                if(snap.exists()) {
+                    const id = Object.keys(snap.val())[0];
+                    const current = snap.val()[id].pontos || 0;
+                    const novoValor = mode === 'add' ? current + val : current - val;
+
+                    await db.ref(`usuarios/${id}`).update({ pontos: novoValor });
+                    status.innerText = `SUCESSO: ${nick} agora tem ${novoValor} PTS`;
+                    status.style.color = "var(--eb-verde-glow)";
+                } else {
+                    status.innerText = "MILITAR NÃO ENCONTRADO";
+                    status.style.color = "var(--danger)";
+                }
+            },
+
+            /**
+             * Carrega a lista de militares em tempo real
+             */
+            loadMilitarList: () => {
+                db.ref('usuarios').on('value', (snapshot) => {
+                    const container = document.getElementById('militar-list-container');
+                    const countEl = document.getElementById('total-count');
+                    container.innerHTML = "";
+                    
+                    let total = 0;
+                    snapshot.forEach((child) => {
+                        const m = child.val();
+                        total++;
+                        container.innerHTML += `
+                            <div class="table-row">
+                                <span style="font-weight: bold;">${m.nome}</span>
+                                <span><span class="rank-tag">${m.cargo}</span></span>
+                                <span style="color: var(--eb-verde-glow); font-family: monospace; font-size: 16px;">${(m.pontos || 0).toFixed(1)}</span>
+                                <span>
+                                    <button onclick="AdminCore.deleteMilitar('${child.key}')" style="background:none; border:none; color:var(--danger); cursor:pointer;">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </span>
+                            </div>
+                        `;
+                    });
+                    countEl.innerText = `${total} MILITARES REGISTRADOS`;
+                });
+            },
+
+            /**
+             * Exporta a base de dados em formato JSON (Backup Tático)
+             */
+            exportData: async () => {
+                const snap = await db.ref().once('value');
+                const data = JSON.stringify(snap.val(), null, 4);
+                const blob = new Blob([data], {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `backup_orbitron_${Date.now()}.json`;
+                a.click();
+            },
+
+            copyKey: () => {
+                navigator.clipboard.writeText(this.lastGeneratedKey);
+                alert("Chave copiada para a área de transferência.");
+            },
+
+            deleteMilitar: (id) => {
+                if(confirm("Deseja EXCLUIR este registro da database?")) {
+                    db.ref(`usuarios/${id}`).remove();
+                }
+            }
+        };
+
+        // INICIALIZAÇÃO
+        window.onload = AdminCore.init;
     </script>
 </body>
 </html>
