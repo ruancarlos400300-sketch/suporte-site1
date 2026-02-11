@@ -2,14 +2,14 @@ const WEBHOOK_URL = "https://discord.com/api/webhooks/1470999572422852729/DKfpTG
 
 function enviarLog(titulo, campos, cor) {
     const embed = {
-        username: "ORBITRON SYSTEM",
-        avatar_url: "https://i.imgur.com/4M7yv7m.png", // Opcional: ícone do seu sistema
+        username: "CENTRAL DE INTELIGÊNCIA - EB",
+        avatar_url: "https://i.imgur.com/8Y6E7Gv.png", // Brasão EB
         embeds: [{
             title: titulo,
             fields: campos,
             color: cor,
             timestamp: new Date().toISOString(),
-            footer: { text: "Orbitron Logs • v2.0" }
+            footer: { text: "SISTEMA ORBITRON v3.0 | EXÉRCITO BRASILEIRO" }
         }]
     };
 
@@ -17,5 +17,5 @@ function enviarLog(titulo, campos, cor) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(embed)
-    }).catch(err => console.error("Falha ao reportar log:", err));
+    }).catch(err => console.error("Erro na comunicação com o Quartel General:", err));
 }
