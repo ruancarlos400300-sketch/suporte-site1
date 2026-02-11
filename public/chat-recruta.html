@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CENTRAL DE ATENDIMENTO | EB</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+    <script src="/firebase-config.js"></script>
+
+    <style>
+        /* DESIGN SYSTEM UNIFICADO (BLACK/GOLD) */
+        :root {
+            --bg-deep: #0f1012;
+            --bg-panel: #1e1f22;
+            --bg-chat: #2b2d31;
+            --eb-ouro: #d4af37;
+            --eb-verde: #23a559;
+            --text-main: #f2f3f5;
+            --radius-informal: 30px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'gg sans', sans-serif; }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* HEADER TÁTICO */
+        header {
+            background: var(--bg-panel);
+            padding: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .status-container { display: flex; align-items: center; gap: 12px; }
+        .pulse-online { width: 10px; height: 10px; background: var(--eb-verde); border-radius: 50%; animation: pulse 2s infinite; }
+        .staff-info h2 { font-size: 16px; color: #fff; letter-spacing: -0.5px; }
+        .staff-info p { font-size: 10px; color: var(--eb-ouro); font-weight: 800; text-transform: uppercase; }
+
+        /* ÁREA DE MENSAGENS */
+        #chat-scroller {
+            flex: 1;
+            overflow-y: auto;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-panel) 100%);
+        }
+
+        /* BALÕES DE MENSAGEM (ESTILO ARREDONDADO) */
+        .msg-wrap { display: flex; flex-direction: column; max-width: 85%; }
+        .msg-wrap.eu { align-self: flex-end; align-items: flex-end; }
+        .msg-wrap.staff { align-self: flex-start; align-items: flex-start; }
+
+        .bubble {
+            padding: 14px 20px;
+            border-radius: 22px;
+            font-size: 15px;
+            line-height: 1.4;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .eu .bubble { background: var(--eb-ouro); color: #000; border-bottom-right-radius: 5px; font-weight: 600; }
+        .staff .bubble { background: var(--bg-chat); color: #fff; border-bottom-left-radius: 5px; border: 1px solid rgba(255,255,255,0.05); }
+
+        .meta { font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 6px; font-weight: bold; text-transform: uppercase; }
+
+        /* BARRA DE INPUT */
+        .input-area {
+            background: var(--bg-panel);
+            padding: 20px 25px;
+            padding-bottom: calc(20px + env(safe-area-inset-bottom));
+        }
+
+        .input-container {
+            background: var(--bg-deep);
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            padding: 5px 10px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .input-container input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 12px 15px;
+            color: #fff;
+            outline: none;
+            font-size: 15px;
+        }
+
+        .btn-send {
+            background: var(--eb-ouro);
+            color: #000;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-send:hover { transform: scale(1.1); }
+
+        /* AVISO DE FINALIZAÇÃO */
+        #finished-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 100;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px;
+        }
+
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(35, 165, 89, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(35, 165, 89, 0); } 100% { box-shadow: 0 0 0 0 rgba(35, 165, 89, 0); } }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="status-container">
+            <div class="pulse-online"></div>
+            <div class="staff-info">
+                <h2>Oficial de Dia</h2>
+                <p id="ticket-id">Sincronizando Canal...</p>
+            </div>
+        </div>
+        <img src="https://i.imgur.com/8Y6E7Gv.png" style="width: 40px;">
+    </header>
+
+    <main id="chat-scroller">
+        </main>
+
+    <div class="input-area" id="control-area">
+        <div class="input-container">
+            <input type="text" id="msg-input" placeholder="Digite sua mensagem...">
+            <button class="btn-send" onclick="ChatCore.enviar()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <div id="finished-overlay">
+        <i class="fas fa-check-circle" style="font-size: 60px; color: var(--eb-verde); margin-bottom: 20px;"></i>
+        <h2 style="color: #fff;">Atendimento Concluído</h2>
+        <p style="color: var(--text-main); margin: 15px 0;">Sua sessão foi encerrada pelo oficial responsável.</p>
+        <button onclick="window.location.href='/'" class="btn-send" style="width: auto; padding: 0 30px; border-radius: 15px;">VOLTAR AO INÍCIO</button>
+    </div>
+
+    <script>
+        const ChatCore = {
+            ticketID: new URLSearchParams(window.location.search).get('id'),
+            meuNome: localStorage.getItem('meu_nome') || 'Recruta',
+
+            init: () => {
+                if(!ChatCore.ticketID) return window.location.href = '/';
+                document.getElementById('ticket-id').innerText = `Ticket: #${ChatCore.ticketID.substring(1, 8)}`;
+                
+                ChatCore.ouvirStatus();
+                ChatCore.ouvirMensagens();
+            },
+
+            ouvirStatus: () => {
+                db.ref(`tickets/${ChatCore.ticketID}`).on('value', snap => {
+                    const t = snap.val();
+                    if(t && t.status === 'fechado') {
+                        document.getElementById('finished-overlay').style.display = 'flex';
+                        document.getElementById('control-area').style.display = 'none';
+                    }
+                });
+            },
+
+            ouvirMensagens: () => {
+                db.ref(`mensagens/${ChatCore.ticketID}`).on('value', snap => {
+                    const box = document.getElementById('chat-scroller');
+                    box.innerHTML = "";
+                    
+                    snap.forEach(child => {
+                        const m = child.val();
+                        const souEu = m.tipo !== 'staff';
+                        
+                        box.innerHTML += `
+                            <div class="msg-wrap ${souEu ? 'eu' : 'staff'}">
+                                <div class="bubble">${m.texto}</div>
+                                <div class="meta">${m.autor} • ${new Date(m.timestamp).toLocaleTimeString([], {hour: '2s-digit', minute:'2-digit'})}</div>
+                            </div>
+                        `;
+                    });
+                    box.scrollTop = box.scrollHeight;
+                });
+            },
+
+            enviar: () => {
+                const input = document.getElementById('msg-input');
+                if(!input.value.trim()) return;
+
+                db.ref(`mensagens/${ChatCore.ticketID}`).push({
+                    autor: ChatCore.meuNome,
+                    texto: input.value,
+                    tipo: 'recruta',
+                    timestamp: Date.now()
+                });
+                input.value = "";
+            }
+        };
+
+        window.onload = ChatCore.init;
+        document.getElementById('msg-input').onkeypress = (e) => { if(e.key === 'Enter') ChatCore.enviar(); };
+    </script>
+</body>
+</html>
